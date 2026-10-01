@@ -1,0 +1,18 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.0">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>a2e67db9-1adf-47b5-b1e2-9ab64b7a7e53</UserSecretsId>
+    <!-- `dotnet run` uses the dashboard/DCP delivered via NuGet, so no Aspire CLI install is required. -->
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.JavaScript" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\backend\Saas.Subscription.Sample.Api\Saas.Subscription.Sample.Api.csproj" />
+  </ItemGroup>
+
+</Project>

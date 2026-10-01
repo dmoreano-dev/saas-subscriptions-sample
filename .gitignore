@@ -1,0 +1,29 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+TestResults/
+*.log
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+coverage/
+
+# IDE / OS
+.vs/
+.idea/
+.vscode/
+.DS_Store
+
+# Secrets and local configuration (never commit real values)
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.key
+appsettings.*.local.json
+secrets.json

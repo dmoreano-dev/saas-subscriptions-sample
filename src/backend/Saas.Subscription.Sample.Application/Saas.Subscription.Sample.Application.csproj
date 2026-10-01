@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Saas.Subscription.Sample.Domain\Saas.Subscription.Sample.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/aspire/">
+    <Project Path="src/aspire/Saas.Subscription.Sample.AppHost/Saas.Subscription.Sample.AppHost.csproj" />
+  </Folder>
+  <Folder Name="/src/backend/">
+    <Project Path="src/backend/Saas.Subscription.Sample.Api/Saas.Subscription.Sample.Api.csproj" />
+    <Project Path="src/backend/Saas.Subscription.Sample.Application/Saas.Subscription.Sample.Application.csproj" />
+    <Project Path="src/backend/Saas.Subscription.Sample.Domain/Saas.Subscription.Sample.Domain.csproj" />
+    <Project Path="src/backend/Saas.Subscription.Sample.Infrastructure/Saas.Subscription.Sample.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/integration/">
+    <Project Path="tests/integration/Saas.Subscription.Sample.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/unit/">
+    <Project Path="tests/unit/Saas.Subscription.Sample.UnitTests.csproj" />
+  </Folder>
+</Solution>
