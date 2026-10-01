@@ -67,6 +67,7 @@ Verify the complete agreed scope, including failure recovery and reproducibility
 
 - [ ] Cover personal Free/Pro/Max, Enterprise, JWT/session/refresh, roles, isolation, quotas, billing, effective dates, cache races, and corporate offboarding.
 - [ ] Run provider-independent tests plus separately evidenced Stripe/browser/provider tests; optional integrations show their actual status.
+- [ ] Add an automated architecture check that each backend layer declares only its allowed project references (Domain → none; Application → Domain; Infrastructure → Application; Api → Application + Infrastructure), deferred from FND-01.
 
 **Verification:** Full test report with failed/skipped/external-blocked cases explicitly identified.
 

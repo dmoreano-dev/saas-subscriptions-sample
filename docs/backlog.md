@@ -2,14 +2,14 @@
 
 Version: 1.0  
 Prepared: 2026-10-01  
-Status: implementation not started  
+Status: see the progress table below  
 Architecture and policies: [Implementation plan](plan.md)
 
 ## How to use this backlog
 
 This is the complete baseline implementation inventory for the agreed learning application: personal Free/Pro/Max subscriptions first, an additional Enterprise organization journey, custom identity before ASP.NET Core Identity, React on Vercel, C# on Render, PostgreSQL on Supabase, and local development dependencies.
 
-There are **99 items: 95 required and 4 optional/conditional extensions**. Every item starts as **Todo**. The planning documents are delivered; application implementation, provider setup, and deployment have not occurred.
+There are **99 items: 95 required and 4 optional/conditional extensions**. Every item starts as **Todo**. The planning documents are delivered; see the progress table below for what is implemented.
 
 - **P0:** required correctness, security, integration, or release foundation for its phase.
 - **P1:** required product experience or learning/comparison work for the full baseline.
@@ -30,7 +30,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 
 | Phase | Items | Required | Done | Link |
 |---|---:|---:|---:|---|
-| P00 — Foundation | 6 | 6 | 0 | [Open](backlog/P00-foundation.md) |
+| P00 — Foundation | 6 | 6 | 1 | [Open](backlog/P00-foundation.md) |
 | P01 — JWT essentials | 6 | 6 | 0 | [Open](backlog/P01-jwt-essentials.md) |
 | P02 — Personal accounts and plans | 8 | 8 | 0 | [Open](backlog/P02-personal-accounts-and-plans.md) |
 | P03 — Billing integration | 8 | 8 | 0 | [Open](backlog/P03-billing-integration.md) |
@@ -45,7 +45,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | P12 — Full lab verification | 6 | 6 | 0 | [Open](backlog/P12-full-lab-verification.md) |
 | Optional — Conditional and future extensions | 4 | 0 | 0 | [Open](backlog/optional-extensions.md) |
 
-**Current focus:** [FND-01](backlog/P00-foundation.md#fnd-01--create-the-english-repository-and-modular-skeleton) — nothing started yet. Update this line to the active item at the start/end of each session.
+**Current focus:** [FND-02](backlog/P00-foundation.md#fnd-02--establish-postgresql-migrations-and-account-foundations) — next item, not started. Update this line to the active item at the start/end of each session.
 
 ## Definition of Done
 
@@ -80,5 +80,6 @@ Phase delivery includes a runnable demonstration and a short explanation of what
 | Date | Change | Evidence / reason |
 |---|---|---|
 | 2026-10-01 | Established planning baseline and all 99 backlog items | Decisions from the design conversation; implementation remains Todo |
+| 2026-10-01 | FND-01 done: solution layout `src/backend` + `src/frontend` + `src/aspire`, Aspire as local orchestrator (D19, ADR 0002) | Replaces the provisional `src/api` / `src/web` layout in plan.md §3 |
 
 Record future scope changes here. Update dependency links, phase counts, traceability, and plan.md whenever items are added, split, removed, or completed.

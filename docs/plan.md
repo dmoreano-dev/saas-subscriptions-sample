@@ -2,7 +2,7 @@
 
 Version: 1.0  
 Prepared: 2026-10-01  
-Status: planning baseline; implementation has not started  
+Status: planning baseline (living document); implementation progress is tracked in backlog.md  
 Companion: [Implementation backlog](backlog.md)
 
 ## 1. Purpose and working agreement
@@ -39,6 +39,7 @@ The backlog is the implementation tracker. This plan defines the architecture, p
 | D16 | Corporate OIDC through a local test identity provider and a C# SCIM endpoint are required | Baseline for complete Enterprise lab |
 | D17 | Live Entra interoperability, SAML, hosted multi-instance Redis, and real-money launch are separately tracked extensions | Conditional/optional scope |
 | D18 | Create an English Markdown backlog with acceptance criteria, dependencies, and test evidence | Delivered by backlog.md |
+| D19 | .NET Aspire AppHost is the single local orchestrator (API, Vite frontend, and later PostgreSQL/Mailpit containers); hosted deployments do not use Aspire. See [ADR 0002](decisions/0002-solution-layout-and-aspire-orchestration.md) | Baseline |
 
 No blocking product question remains. Credentials, actual resource names, a verified email domain, and provider account access are setup inputs, not reasons to defer the local implementation. They must be supplied through secure configuration when the relevant phase begins, never pasted into tracked files.
 
@@ -92,21 +93,24 @@ Use a modular monolith with one API deployment and one relational database. Keep
 
 Suggested repository layout (created during implementation):
 
-    src/api/SubscriptionLab.Api/
-    src/api/SubscriptionLab.Application/
-    src/api/SubscriptionLab.Domain/
-    src/api/SubscriptionLab.Infrastructure/
-    src/web/
+    Saas.Subscription.Sample.slnx
+    src/backend/Saas.Subscription.Sample.Domain/
+    src/backend/Saas.Subscription.Sample.Application/
+    src/backend/Saas.Subscription.Sample.Infrastructure/   (all provider integrations: persistence, email, billing, cache, ...)
+    src/backend/Saas.Subscription.Sample.Api/
+    src/frontend/
+    src/aspire/Saas.Subscription.Sample.AppHost/           (local orchestration only)
     tests/unit/
     tests/integration/
     tests/browser/
-    infra/docker/
     CLAUDE.md
     docs/plan.md
     docs/backlog.md            (index)
     docs/backlog/              (one file per phase: P00…P12, optional)
     docs/decisions/
     docs/runbooks/
+
+Layer references are one-directional: Domain depends on nothing, Application on Domain, Infrastructure on Application, and Api composes Application and Infrastructure. Interfaces (seams) live in Application; their provider implementations live in Infrastructure, one folder per integration. Modules (Identity, Accounts, Billing, ...) are folders inside each layer, not separate projects. An automated check of the declared project references is deferred to FIN-04.
 
 Useful integration seams are IBillingGateway, IEmailSender, a password-hashing abstraction, and an account entitlement service. Use .NET TimeProvider for business time and tests. Keep authorization policies and use-case validation centralized instead of scattering plan-name comparisons through controllers.
 
@@ -354,8 +358,8 @@ Client retries of mutations use idempotency keys where needed. Generate the Type
 | Concern | Local development | Hosted testing |
 |---|---|---|
 | Frontend | React/Vite with /api development proxy | Vercel with explicit API rewrite to Render |
-| API | dotnet run or local Dockerfile | Render Docker web service, one instance initially |
-| Database | PostgreSQL container with named volume | Dedicated Supabase test project |
+| API | Started by the Aspire AppHost (`dotnet run` on the AppHost), or `dotnet run` on the API alone | Render Docker web service, one instance initially |
+| Database | PostgreSQL container with named volume, declared in the AppHost (FND-02) | Dedicated Supabase test project |
 | Cache | Memory; Redis container added in P11 | Memory initially; external Redis only if selected later |
 | Billing | Simulator and Stripe Sandbox via CLI forwarding | Separate Stripe Sandbox configuration and public signed webhook |
 | Email | Mailpit; MailDev may replace it via SMTP configuration | HTTPS email provider with test recipients/domain |
@@ -364,7 +368,7 @@ Client retries of mutations use idempotency keys where needed. Generate the Type
 
 ### Local setup and configuration
 
-Pin .NET/EF/provider, Node, package-manager, and container versions when P00 starts. Match the local PostgreSQL major version to the Supabase project's selected version. Keep one checked-in example configuration with placeholders and one documented local startup path. Never commit a real .env, signing private key, provider API key, or connection string.
+Pin .NET/EF/provider, Node, package-manager, and container versions when P00 starts. Match the local PostgreSQL major version to the Supabase project's selected version. Keep one checked-in example configuration with placeholders and one documented local startup path: the Aspire AppHost (D19), which is local orchestration only and is never part of the Render image. Never commit a real .env, signing private key, provider API key, or connection string.
 
 Configuration groups: Database, Authentication, Billing, Email, Cache, Frontend, CorporateIdentity, and BackgroundWork. Cache:Provider selects Memory or Redis explicitly; deployment does not automatically mean Redis. Distinguish feature availability for staged lessons from customer entitlements. Startup rejects an unsafe hosted combination such as enabled public billing-simulator endpoints or missing signing keys.
 

@@ -8,9 +8,9 @@ A learning SaaS lab built step by step: a C# API + React frontend with personal 
 subscriptions and an additional Enterprise organization experience (identity, authorization,
 entitlements, billing, data isolation, and their failure modes).
 
-**Implementation has not started.** There is no application code yet — only the specification:
+Implementation progress lives in the progress table of `docs/backlog.md`. The specification:
 
-- [`docs/plan.md`](docs/plan.md) — architecture, decisions (D01–D18), data model and invariants,
+- [`docs/plan.md`](docs/plan.md) — architecture, decisions (D01–D19), data model and invariants,
   auth progression, authorization/cache consistency, billing, Enterprise, deployment, test strategy.
   This is the source of truth for *what* and *why*.
 - [`docs/backlog.md`](docs/backlog.md) — the implementation **index**: how-to, progress table,
@@ -110,10 +110,22 @@ If the next item's dependencies are not all Done, say so and propose the correct
   broker/CQRS/generic-repository required. Use `TimeProvider` for business time.
 - Web: React + TypeScript + Vite.
 - Deploy targets: API → Render (Docker), Web → Vercel, DB → Supabase PostgreSQL.
-- Intended layout (create during FND-01): `src/api/SubscriptionLab.{Api,Application,Domain,Infrastructure}`,
-  `src/web/`, `tests/{unit,integration,browser}/`, `infra/docker/`, `docs/`.
-- **Toolchain versions are pinned in FND-01** (not chosen yet); match local PostgreSQL major version to
-  the Supabase project.
+- Layout (created in FND-01; see [ADR 0002](docs/decisions/0002-solution-layout-and-aspire-orchestration.md)):
+  solution `Saas.Subscription.Sample.slnx` at the root; `src/backend/Saas.Subscription.Sample.{Domain,Application,Infrastructure,Api}`
+  (all provider integrations live in `Infrastructure`), `src/frontend/`, `src/aspire/Saas.Subscription.Sample.AppHost`
+  (the single local orchestrator), `tests/{unit,integration,browser}/`, `docs/`.
+- **Toolchain versions are pinned in FND-01** (see README "Pinned toolchain"): .NET SDK 10.0.401, Aspire 13.6.0,
+  Node 24.16.0, npm 11.13.0. PostgreSQL major version (target 17) is confirmed against the Supabase project
+  in FND-02; match the local container to it.
+
+## Commands
+
+```
+dotnet build Saas.Subscription.Sample.slnx
+dotnet test  Saas.Subscription.Sample.slnx
+dotnet run --project src/aspire/Saas.Subscription.Sample.AppHost --launch-profile https   # API + frontend
+(cd src/frontend && npm ci && npm run build && npm run lint)
+```
 
 ## Secrets
 

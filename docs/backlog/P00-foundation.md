@@ -6,7 +6,7 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 
 ### FND-01 — Create the English repository and modular skeleton
 
-**Status:** Todo · **Priority:** P0 · **Phase:** P00 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P0 · **Phase:** P00 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** None
 
@@ -14,12 +14,21 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 
 **Acceptance criteria:**
 
-- [ ] The solution and frontend build from documented commands; all authored identifiers and technical documentation are English.
-- [ ] Import plan.md/backlog.md into docs, add a README, and record pinned toolchain versions and architecture boundaries.
+- [x] The solution and frontend build from documented commands; all authored identifiers and technical documentation are English.
+- [x] Import plan.md/backlog.md into docs, add a README, and record pinned toolchain versions and architecture boundaries.
 
 **Verification:** Clean-checkout build and documentation review.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-01. Commit: `git log --grep FND-01`.
+
+- Clean-checkout simulation: copied only the non-ignored files (`git ls-files -co --exclude-standard`, 62 files, no `bin/obj/node_modules`) to a temp directory and ran the README commands there:
+  `dotnet build Saas.Subscription.Sample.slnx` → 0 warnings, 0 errors (warnings are errors);
+  `dotnet test Saas.Subscription.Sample.slnx` → 2/2 passed (integration `WebApplicationFactory` tests for `/health/live` and an unknown route; the unit project is an empty skeleton);
+  `cd src/frontend && npm ci && npm run build && npm run lint` → OK, 0 vulnerabilities.
+- Local startup: `dotnet run --project src/aspire/Saas.Subscription.Sample.AppHost --launch-profile https` started the API and Vite; `/health/live` returned 200 `Healthy` over HTTP and HTTPS, the frontend served the page, and `/api/*` through Vite reached the API (404 from the API, not 502). Shut down cleanly with SIGTERM.
+- Docs: layout and Aspire recorded in [ADR 0002](../decisions/0002-solution-layout-and-aspire-orchestration.md); `plan.md` §2 (D19), §3 and §10, `CLAUDE.md` and the ADR index updated; README documents pinned toolchain, boundaries and clean-build steps.
+- Pinned: .NET SDK 10.0.401, net10.0, Aspire 13.6.0, xUnit 2.9.3, Node 24.16.0, npm 11.13.0; the Vite template resolved to Vite 8.3.2, TypeScript 6.0.3, React 19.3.0 (locked in `package-lock.json`).
+- Limitations: layer-reference rules are enforced by review only (an automated check was removed from FND-01 and deferred to FIN-04); PostgreSQL major version (target 17) is documented but not pinned in code until FND-02; Docker is not exercised yet (first needed in FND-02); no CI and no frontend/browser tests yet (FND-06); "clean checkout" was simulated from the working tree rather than a real clone of a commit; Aspire verification was manual, on macOS arm64 only; the `http` AppHost profile does not start without `ASPIRE_ALLOW_UNSECURED_TRANSPORT` (README documents the `https` profile).
 
 ### FND-02 — Establish PostgreSQL migrations and account foundations
 

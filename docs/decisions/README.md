@@ -15,7 +15,7 @@ sessions don't re-litigate it. Keep each ADR short.
 
 ## Relationship to the other docs
 
-- Baseline decisions **D01–D18** already live in [`../plan.md` §2](../plan.md); those stay there. ADRs
+- Baseline decisions **D01–D19** already live in [`../plan.md` §2](../plan.md); those stay there. ADRs
   here record decisions made *during implementation* and any change to a baseline decision.
 - When an ADR changes a policy, also update `plan.md` and the affected backlog acceptance criteria.
 
@@ -30,3 +30,4 @@ sessions don't re-litigate it. Keep each ADR short.
 | # | Title | Status |
 |---|---|---|
 | [0001](0001-record-architecture-decisions.md) | Record architecture decisions in ADRs | Accepted |
+| [0002](0002-solution-layout-and-aspire-orchestration.md) | Solution layout and Aspire as the local orchestrator | Accepted |
