@@ -39,7 +39,8 @@ The backlog is the implementation tracker. This plan defines the architecture, p
 | D16 | Corporate OIDC through a local test identity provider and a C# SCIM endpoint are required | Baseline for complete Enterprise lab |
 | D17 | Live Entra interoperability, SAML, hosted multi-instance Redis, and real-money launch are separately tracked extensions | Conditional/optional scope |
 | D18 | Create an English Markdown backlog with acceptance criteria, dependencies, and test evidence | Delivered by backlog.md |
-| D19 | .NET Aspire AppHost is the single local orchestrator (API, Vite frontend, and later PostgreSQL/Mailpit containers); hosted deployments do not use Aspire. See [ADR 0002](decisions/0002-solution-layout-and-aspire-orchestration.md) | Baseline |
+| D19 | .NET Aspire AppHost is the single local orchestrator (API, Vite frontend, PostgreSQL, and later Mailpit/Redis/IdP containers); hosted deployments do not use Aspire. See [ADR 0002](decisions/0002-solution-layout-and-aspire-orchestration.md) | Baseline |
+| D20 | Migrations are applied by a separate Migrator step (never on API startup); tables live in the default `public` schema and one database login serves migrations and the API for now; custom schemas and separate migration/runtime roles are deferred (hosted database, DEP-01). See [ADR 0003](decisions/0003-postgresql-migrations-and-database-layout.md) | Baseline |
 
 No blocking product question remains. Credentials, actual resource names, a verified email domain, and provider account access are setup inputs, not reasons to defer the local implementation. They must be supplied through secure configuration when the relevant phase begins, never pasted into tracked files.
 
@@ -97,6 +98,7 @@ Suggested repository layout (created during implementation):
     src/backend/Saas.Subscription.Sample.Domain/
     src/backend/Saas.Subscription.Sample.Application/
     src/backend/Saas.Subscription.Sample.Infrastructure/   (all provider integrations: persistence, email, billing, cache, ...)
+    src/backend/Saas.Subscription.Sample.Migrator/         (applies EF migrations; never part of the API)
     src/backend/Saas.Subscription.Sample.Api/
     src/frontend/
     src/aspire/Saas.Subscription.Sample.AppHost/           (local orchestration only)
@@ -110,7 +112,7 @@ Suggested repository layout (created during implementation):
     docs/decisions/
     docs/runbooks/
 
-Layer references are one-directional: Domain depends on nothing, Application on Domain, Infrastructure on Application, and Api composes Application and Infrastructure. Interfaces (seams) live in Application; their provider implementations live in Infrastructure, one folder per integration. Modules (Identity, Accounts, Billing, ...) are folders inside each layer, not separate projects. An automated check of the declared project references is deferred to FIN-04.
+Layer references are one-directional: Domain depends on nothing, Application on Domain, Infrastructure on Application, Api composes Application and Infrastructure, and the Migrator depends on Infrastructure only. Interfaces (seams) live in Application; their provider implementations live in Infrastructure, one folder per integration. Modules (Identity, Accounts, Billing, ...) are folders inside each layer, not separate projects. An automated check of the declared project references is deferred to FIN-04.
 
 Useful integration seams are IBillingGateway, IEmailSender, a password-hashing abstraction, and an account entitlement service. Use .NET TimeProvider for business time and tests. Keep authorization policies and use-case validation centralized instead of scattering plan-name comparisons through controllers.
 
@@ -131,7 +133,7 @@ Proxying is a browser integration choice, not an authorization boundary. Direct 
 
 ## 4. Data model and invariants
 
-Use UUID identifiers, UTC timestamps, decimal monetary amounts with currency, explicit concurrency control, and migration-managed schemas. Use English snake_case database identifiers. Keep stable user and account IDs through the Identity comparison. Separate the application schemas from Supabase-managed schemas.
+Use UUID identifiers, UTC timestamps, decimal monetary amounts with currency, explicit concurrency control, and migration-managed schemas. Use English snake_case database identifiers. Keep stable user and account IDs through the Identity comparison. Keep application tables apart from Supabase-managed schemas (`auth`, `storage`, ...): the lab uses the default `public` schema with the exposure caveat in §10.
 
 | Module | Core tables and key information |
 |---|---|
@@ -359,7 +361,7 @@ Client retries of mutations use idempotency keys where needed. Generate the Type
 |---|---|---|
 | Frontend | React/Vite with /api development proxy | Vercel with explicit API rewrite to Render |
 | API | Started by the Aspire AppHost (`dotnet run` on the AppHost), or `dotnet run` on the API alone | Render Docker web service, one instance initially |
-| Database | PostgreSQL container with named volume, declared in the AppHost (FND-02) | Dedicated Supabase test project |
+| Database | PostgreSQL 17 container with named volume `saas-sample-pgdata`, declared in the AppHost; Migrator runs before the API (FND-02) | Dedicated Supabase test project |
 | Cache | Memory; Redis container added in P11 | Memory initially; external Redis only if selected later |
 | Billing | Simulator and Stripe Sandbox via CLI forwarding | Separate Stripe Sandbox configuration and public signed webhook |
 | Email | Mailpit; MailDev may replace it via SMTP configuration | HTTPS email provider with test recipients/domain |
@@ -376,9 +378,9 @@ Use environment-specific secrets and provider mappings. Namespace cache entries 
 
 ### Supabase
 
-Connect through Npgsql/EF Core with TLS certificate verification. Choose direct connectivity when supported or the session pooler for an IPv4-compatible persistent backend. Size connection pools against the project's connection limits. Review provider behavior before selecting transaction pooling, which has different connection/session semantics. Use a limited runtime database role and a separate migration identity.
+Connect through Npgsql/EF Core with TLS certificate verification. Choose direct connectivity when supported or the session pooler for an IPv4-compatible persistent backend. Size connection pools against the project's connection limits. Review provider behavior before selecting transaction pooling, which has different connection/session semantics. Use a limited runtime database role and a separate migration identity when the hosted database is provisioned (DEP-01); until then the lab uses a single login for both, a deliberate learning simplification (ADR 0003).
 
-Disable the unused Supabase Data API or keep application schemas unexposed with explicit grants. Never expose credential tables through a browser-accessible data endpoint. Our local users do not live in Supabase Auth tables. JWT validation in C# does not automatically populate PostgreSQL auth context. [Connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres), [Data API controls](https://supabase.com/docs/guides/api/securing-your-api).
+Disable the unused Supabase Data API or keep application schemas unexposed with explicit grants. Locally the lab keeps its tables in the default `public` schema (ADR 0003); Supabase exposes `public` through the Data API by default, so disabling the Data API (or revoking `anon`/`authenticated` privileges) is mandatory before the hosted database holds any data (DEP-01). Never expose credential tables through a browser-accessible data endpoint. Our local users do not live in Supabase Auth tables. JWT validation in C# does not automatically populate PostgreSQL auth context. [Connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres), [Data API controls](https://supabase.com/docs/guides/api/securing-your-api).
 
 Apply migrations once per deployment through a controlled CI/operator step, with a database lock and recorded result. Do not assume every Render tier supports predeploy jobs. Avoid uncontrolled concurrent migrations on API startup. Use backward-compatible changes where possible and document rollback limitations before destructive schema changes. Keep sandbox seeds idempotent and separate from schema migrations.
 

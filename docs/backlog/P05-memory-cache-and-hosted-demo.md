@@ -99,8 +99,8 @@ Add memory cache and prove its consistency limits, then run the first hosted tes
 
 **Acceptance criteria:**
 
-- [ ] Select a verified direct/session-pooler connection with TLS and bounded pooling; use separate migration/runtime roles.
-- [ ] Apply the same migrations/seeds as local; application/credential schemas are unexposed or the unused Data API is disabled; no Supabase Auth dependency is introduced.
+- [ ] Select a verified direct/session-pooler connection with TLS and bounded pooling; use separate migration/runtime roles (deferred from FND-02, which uses a single login: create the limited runtime login, its grants and the tests that prove it cannot run DDL).
+- [ ] Apply the same migrations/seeds as local; the unused Data API is disabled or `anon`/`authenticated` have no privileges on the application tables (FND-02 keeps them in the default `public` schema, which Supabase exposes by default; revisit custom schemas here if preferred); no Supabase Auth dependency is introduced.
 
 **Verification:** Connectivity, migration, grants/exposure, and cross-account smoke tests.
 

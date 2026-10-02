@@ -24,8 +24,10 @@ All code, identifiers, comments, tests and technical documentation are in Englis
 | Node.js | 24.16.0 | `src/frontend/.nvmrc`, `engines` in `package.json` |
 | npm | 11.13.0 | `packageManager` in `package.json` |
 | Frontend dependencies | React, Vite, TypeScript as locked | `src/frontend/package-lock.json` (use `npm ci`) |
-| Docker | Docker Engine/Desktop, any current version (verified with 29.7.2) | needed from FND-02 (PostgreSQL container) |
-| PostgreSQL | target major **17**, to be confirmed against the Supabase project | decided and pinned in FND-02 |
+| Docker | Docker Engine/Desktop, any current version (verified with 29.7.2) | required for local PostgreSQL and the relational tests (FND-02) |
+| PostgreSQL | major **17** (assumed Supabase major; confirm when the Supabase project exists) | `WithImageTag("17")` in the AppHost, `postgres:17` in `tests/integration` |
+| EF Core / Npgsql | EF Core 10.0.12 (`dotnet-ef` tool), Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3, EFCore.NamingConventions 10.0.1 | `Directory.Packages.props`, `.config/dotnet-tools.json` |
+| Testcontainers | Testcontainers.PostgreSql 4.15.0 | `Directory.Packages.props` |
 
 NuGet package versions are managed centrally in `Directory.Packages.props`; do not put versions in `.csproj` files.
 
@@ -35,7 +37,8 @@ NuGet package versions are managed centrally in `Directory.Packages.props`; do n
 Saas.Subscription.Sample.slnx
 src/backend/Saas.Subscription.Sample.Domain/          no dependencies
 src/backend/Saas.Subscription.Sample.Application/     -> Domain; use cases and seams (interfaces)
-src/backend/Saas.Subscription.Sample.Infrastructure/  -> Application; every provider integration
+src/backend/Saas.Subscription.Sample.Infrastructure/  -> Application; every provider integration (PostgreSQL/EF Core in Persistence/)
+src/backend/Saas.Subscription.Sample.Migrator/        -> Infrastructure; applies EF migrations (never run by the API)
 src/backend/Saas.Subscription.Sample.Api/             -> Application + Infrastructure; HTTP host
 src/frontend/                                            React + TypeScript + Vite
 src/aspire/Saas.Subscription.Sample.AppHost/          local orchestration only
@@ -46,7 +49,7 @@ docs/
 ### Architecture boundaries
 
 - References go one way: **Domain → nothing; Application → Domain; Infrastructure → Application;
-  Api → Application + Infrastructure.** This is enforced by review for now; an automated check is
+  Api → Application + Infrastructure; Migrator → Infrastructure.** This is enforced by review for now; an automated check is
   deferred to FIN-04.
 - Seams such as `IBillingGateway` and `IEmailSender` are declared in `Application`; their
   PostgreSQL, SMTP, Stripe, cache and identity implementations live in `Infrastructure`, one folder per
@@ -72,7 +75,9 @@ npm run build
 npm run lint
 ```
 
-Warnings are treated as errors for the whole solution.
+Warnings are treated as errors for the whole solution. The relational integration tests start a real
+PostgreSQL 17 container through Testcontainers, so **Docker must be running** (no other credentials are
+needed); they fail with an explicit message, and are never skipped, when Docker is unavailable.
 
 ## Running locally
 
@@ -87,7 +92,10 @@ dotnet run --project src/aspire/Saas.Subscription.Sample.AppHost --launch-profil
 - Aspire dashboard: `https://localhost:17085` (the login URL with a one-time token is printed in the console).
 - API: `http://localhost:5282` or `https://localhost:7101`; liveness check at `/health/live`.
 - Frontend: the dashboard lists the dynamically assigned Vite URL. Requests to `/api` are proxied to the API.
-- Stop with Ctrl+C. PostgreSQL and Mailpit containers are added to the AppHost by FND-02 and FND-05.
+- PostgreSQL 17 runs in a container with the persistent volume `saas-sample-pgdata`; the Migrator runs to
+  completion before the API starts. The database password is generated once into the AppHost's user secrets. Docker must be running. See [`docs/runbooks/database-migrations.md`](docs/runbooks/database-migrations.md)
+  (reset, inspect, add a migration, run the Migrator by hand).
+- Stop with Ctrl+C; the data survives in the volume. A Mailpit container is added to the AppHost by FND-05.
 
 You can also run pieces alone: `dotnet run --project src/backend/Saas.Subscription.Sample.Api`
 and `npm run dev` in `src/frontend` (the proxy falls back to `http://localhost:5282`).

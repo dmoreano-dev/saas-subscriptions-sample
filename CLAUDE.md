@@ -24,6 +24,12 @@ Read the plan and the relevant phase file before writing code. Open only the pha
 
 - **Language split:** all code, schema, migrations, identifiers, comments, tests, logs, error codes,
   and technical docs are in **English**. Explanations to the user in chat are in **Spanish**.
+- **Test conventions:** follow Microsoft's [unit testing best practices](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices):
+  names are `Method_Scenario_ExpectedBehavior`; explicit `// Arrange`, `// Act`, `// Assert` sections with a
+  single Act per test (use `[Theory]` instead of loops or repeated calls); minimal inputs; constants instead
+  of magic strings; no logic in tests; helper methods instead of setup/teardown; time and other statics through
+  seams (`TimeProvider`/parameters). Unit tests (`tests/unit`) have no infrastructure dependencies; anything that
+  needs PostgreSQL or the host belongs in `tests/integration`.
 - **Sequence:** start at **FND-01** and follow phase order P00→P12, respecting each item's dependency
   IDs. Mark an item *In progress* only when actually started.
 - **Teach-the-concept-in-isolation:** do not scaffold later-phase mechanisms into earlier phases.
@@ -111,12 +117,12 @@ If the next item's dependencies are not all Done, say so and propose the correct
 - Web: React + TypeScript + Vite.
 - Deploy targets: API → Render (Docker), Web → Vercel, DB → Supabase PostgreSQL.
 - Layout (created in FND-01; see [ADR 0002](docs/decisions/0002-solution-layout-and-aspire-orchestration.md)):
-  solution `Saas.Subscription.Sample.slnx` at the root; `src/backend/Saas.Subscription.Sample.{Domain,Application,Infrastructure,Api}`
-  (all provider integrations live in `Infrastructure`), `src/frontend/`, `src/aspire/Saas.Subscription.Sample.AppHost`
+  solution `Saas.Subscription.Sample.slnx` at the root; `src/backend/Saas.Subscription.Sample.{Domain,Application,Infrastructure,Api,Migrator}`
+  (all provider integrations live in `Infrastructure`; the `Migrator` console applies EF migrations, see [ADR 0003](docs/decisions/0003-postgresql-migrations-and-database-layout.md)), `src/frontend/`, `src/aspire/Saas.Subscription.Sample.AppHost`
   (the single local orchestrator), `tests/{unit,integration,browser}/`, `docs/`.
 - **Toolchain versions are pinned in FND-01** (see README "Pinned toolchain"): .NET SDK 10.0.401, Aspire 13.6.0,
-  Node 24.16.0, npm 11.13.0. PostgreSQL major version (target 17) is confirmed against the Supabase project
-  in FND-02; match the local container to it.
+  Node 24.16.0, npm 11.13.0. PostgreSQL major **17** is pinned (assumed Supabase major; confirm against the Supabase
+  project when it exists and keep the local container matching it).
 
 ## Commands
 
@@ -125,7 +131,10 @@ dotnet build Saas.Subscription.Sample.slnx
 dotnet test  Saas.Subscription.Sample.slnx
 dotnet run --project src/aspire/Saas.Subscription.Sample.AppHost --launch-profile https   # API + frontend
 (cd src/frontend && npm ci && npm run build && npm run lint)
+dotnet tool run dotnet-ef migrations add <Name> --project src/backend/Saas.Subscription.Sample.Infrastructure --startup-project src/backend/Saas.Subscription.Sample.Migrator --output-dir Persistence/Migrations
 ```
+
+`dotnet test` needs Docker running (Testcontainers starts a real PostgreSQL 17).
 
 ## Secrets
 

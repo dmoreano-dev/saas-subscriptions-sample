@@ -31,3 +31,4 @@ sessions don't re-litigate it. Keep each ADR short.
 |---|---|---|
 | [0001](0001-record-architecture-decisions.md) | Record architecture decisions in ADRs | Accepted |
 | [0002](0002-solution-layout-and-aspire-orchestration.md) | Solution layout and Aspire as the local orchestrator | Accepted |
+| [0003](0003-postgresql-migrations-and-database-layout.md) | PostgreSQL migrations and database layout | Accepted |

@@ -7,7 +7,6 @@ builder.Services.AddHealthChecks();
 var app = builder.Build();
 
 // Liveness only reports that the process is running; it intentionally runs no dependency checks.
-// Readiness (/health/ready) is added together with the first dependency (PostgreSQL, FND-02).
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 
 app.Run();

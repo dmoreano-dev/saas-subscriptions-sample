@@ -32,7 +32,7 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 
 ### FND-02 — Establish PostgreSQL migrations and account foundations
 
-**Status:** Todo · **Priority:** P0 · **Phase:** P00 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P0 · **Phase:** P00 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** [FND-01](#fnd-01--create-the-english-repository-and-modular-skeleton)
 
@@ -40,12 +40,21 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 
 **Acceptance criteria:**
 
-- [ ] Local PostgreSQL uses a persistent container volume and migration-managed application schemas.
-- [ ] UUID keys, UTC timestamps, account ownership, personal-account uniqueness, foreign keys, and runtime/migration database roles are documented and enforced.
+- [x] Local PostgreSQL uses a persistent container volume and migration-managed application schemas.
+- [x] UUID keys, UTC timestamps, account ownership, personal-account uniqueness, and foreign keys are documented and enforced. *(Scope change 2026-10-02: separate runtime/migration database roles were removed from this item and deferred to DEP-01; one login is used for now, see ADR 0003.)*
 
 **Verification:** Apply migrations to an empty real PostgreSQL instance and verify constraints.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-01. Commit: `git log --grep FND-02`. Decisions: [ADR 0003](../decisions/0003-postgresql-migrations-and-database-layout.md); runbook: [database-migrations](../runbooks/database-migrations.md).
+
+- Verification after the scope changes and the test refactor (2026-10-02): `dotnet build Saas.Subscription.Sample.slnx` → 0 warnings, 0 errors; `dotnet test` → 10/10 unit and 29/29 integration passed (27 against a real PostgreSQL 17 container through Testcontainers, 2 health-endpoint tests); `dotnet ef migrations has-pending-model-changes` → no drift; `dotnet ef migrations add` verified without a running database. An earlier 90-file clean-checkout simulation (non-ignored files only) passed with the same commands before the scope changes.
+- Relational tests (`tests/integration/Persistence`): migrations apply to an empty database (exactly `users`, `accounts`, `memberships` and the EF history table in the default `public` schema, no custom schema); re-running is a no-op; 4 concurrent Migrator runs apply each migration exactly once (EF Core's migration lock); keys are `uuid`, `*_at` are `timestamptz`, identifiers are snake_case; unique normalized email and non-canonical-email CHECK; one personal account per user (partial unique index); personal account without its owner membership rejected at commit (deferrable composite FK), also when the only member is someone else; personal/organization owner CHECK, type/status CHECKs; membership FKs, unique `(account_id, user_id)`, `ON DELETE RESTRICT`; `xmin` optimistic concurrency throws `DbUpdateConcurrencyException`.
+- Test sensitivity (manual mutation check on the final tests, reverted): removing the deferrable FK failed the 2 commit-time tests; making the partial index non-unique failed the duplicate-personal-account test; removing the email CHECK failed its 3 cases; removing the owner CHECK failed its 2 tests.
+- Test conventions: tests follow Microsoft's [unit testing best practices](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices) (see CLAUDE.md).
+- Local stack (manual, macOS arm64, Docker 29.7.2): `dotnet run` on the AppHost (https profile) started `postgres:17` with volume `saas-sample-pgdata`, ran the Migrator to completion (the API waited for it), schemas/tables/history row present, API `/health/live` Healthy. A row inserted before a stop/restart was still there afterwards, the persisted admin password still worked and the Migrator was a no-op. After the scope change the volume was recreated and the same startup re-verified.
+- Scope change (2026-10-02): custom schemas (`identity`, `accounts`, `schema_migrations`) were removed; everything lives in `public`. The initial migration was regenerated, the local volume recreated and the stack re-verified (`\dt` shows the 4 tables; migration applied; API Healthy).
+- Scope change (2026-10-02): `memberships.is_owner` was removed (the personal owner is `accounts.personal_owner_user_id`; roles arrive in P02/P08). Migration regenerated, volume recreated, stack re-verified.
+- Limitations: tables are in `public`, which Supabase exposes through its Data API by default, so DEP-01 must disable the Data API or revoke `anon`/`authenticated` privileges before any hosted data; a single database login (the container `postgres` superuser locally) is used for migrations and, later, for the API; separate migration/runtime roles, least-privilege grants and their tests were built and then removed on 2026-10-02 as out of scope for the learning goal, and are deferred to DEP-01; PostgreSQL major 17 is assumed, not yet confirmed against a Supabase project (none exists yet); the API does not connect to the database yet (typed Database options FND-04, registration P01), so there is no `/health/ready` check; no CI yet, so the Docker-required tests run locally only (FND-06); the `Down` migration was not exercised; a membership carries no role until P02 (the owner of a personal account is read from `accounts.personal_owner_user_id`).
 
 ### FND-03 — Define API and frontend contracts
 
