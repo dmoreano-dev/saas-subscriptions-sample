@@ -9,6 +9,7 @@
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
@@ -19,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\backend\Saas.Subscription.Sample.Api\Saas.Subscription.Sample.Api.csproj" />
+    <ProjectReference Include="..\..\src\backend\Saas.Subscription.Sample.Infrastructure\Saas.Subscription.Sample.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

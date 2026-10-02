@@ -8,6 +8,7 @@
     <Project Path="src/backend/Saas.Subscription.Sample.Application/Saas.Subscription.Sample.Application.csproj" />
     <Project Path="src/backend/Saas.Subscription.Sample.Domain/Saas.Subscription.Sample.Domain.csproj" />
     <Project Path="src/backend/Saas.Subscription.Sample.Infrastructure/Saas.Subscription.Sample.Infrastructure.csproj" />
+    <Project Path="src/backend/Saas.Subscription.Sample.Migrator/Saas.Subscription.Sample.Migrator.csproj" />
   </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/integration/">

@@ -9,10 +9,12 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.JavaScript" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\backend\Saas.Subscription.Sample.Api\Saas.Subscription.Sample.Api.csproj" />
+    <ProjectReference Include="..\..\backend\Saas.Subscription.Sample.Migrator\Saas.Subscription.Sample.Migrator.csproj" />
   </ItemGroup>
 
 </Project>

@@ -17,3 +17,7 @@ trim_trailing_whitespace = false
 # Descriptive Method_does_something_when_x names are the convention for test methods.
 [tests/**.cs]
 dotnet_diagnostic.CA1707.severity = none
+
+# EF Core migrations are generated; analyzers and style rules do not apply to them.
+[**/Persistence/Migrations/*.cs]
+generated_code = true
