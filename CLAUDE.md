@@ -131,6 +131,8 @@ dotnet build Saas.Subscription.Sample.slnx
 dotnet test  Saas.Subscription.Sample.slnx
 dotnet run --project src/aspire/Saas.Subscription.Sample.AppHost --launch-profile https   # API + frontend
 (cd src/frontend && npm ci && npm run build && npm run lint)
+(cd src/frontend && npm run contract:generate)   # after changing an endpoint/DTO: regenerates docs/contracts/openapi.json + TS types
+(cd src/frontend && npm run contract:check)      # fails if the TS types drift from the committed OpenAPI document
 dotnet tool run dotnet-ef migrations add <Name> --project src/backend/Saas.Subscription.Sample.Infrastructure --startup-project src/backend/Saas.Subscription.Sample.Migrator --output-dir Persistence/Migrations
 ```
 

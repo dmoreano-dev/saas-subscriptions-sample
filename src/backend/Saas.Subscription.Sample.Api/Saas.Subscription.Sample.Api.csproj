@@ -1,5 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <!--
+      The committed OpenAPI document (docs/contracts/openapi.json) is regenerated only on request:
+        dotnet build src/backend/Saas.Subscription.Sample.Api -p:GenerateOpenApiContract=true
+      A plain build never rewrites it, so a contract change that was not regenerated fails the
+      contract test instead of being silently absorbed by the build.
+    -->
+    <OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GenerateOpenApiContract)' == 'true'">
+    <OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
+    <OpenApiDocumentsDirectory>$(MSBuildThisFileDirectory)..\..\..\docs\contracts</OpenApiDocumentsDirectory>
+    <OpenApiGenerateDocumentsOptions>--file-name openapi</OpenApiGenerateDocumentsOptions>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Saas.Subscription.Sample.Application\Saas.Subscription.Sample.Application.csproj" />
     <ProjectReference Include="..\Saas.Subscription.Sample.Infrastructure\Saas.Subscription.Sample.Infrastructure.csproj" />

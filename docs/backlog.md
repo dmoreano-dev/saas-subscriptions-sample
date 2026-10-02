@@ -30,7 +30,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 
 | Phase | Items | Required | Done | Link |
 |---|---:|---:|---:|---|
-| P00 — Foundation | 6 | 6 | 2 | [Open](backlog/P00-foundation.md) |
+| P00 — Foundation | 6 | 6 | 3 | [Open](backlog/P00-foundation.md) |
 | P01 — JWT essentials | 6 | 6 | 0 | [Open](backlog/P01-jwt-essentials.md) |
 | P02 — Personal accounts and plans | 8 | 8 | 0 | [Open](backlog/P02-personal-accounts-and-plans.md) |
 | P03 — Billing integration | 8 | 8 | 0 | [Open](backlog/P03-billing-integration.md) |
@@ -45,7 +45,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | P12 — Full lab verification | 6 | 6 | 0 | [Open](backlog/P12-full-lab-verification.md) |
 | Optional — Conditional and future extensions | 4 | 0 | 0 | [Open](backlog/optional-extensions.md) |
 
-**Current focus:** [FND-03](backlog/P00-foundation.md#fnd-03--define-api-and-frontend-contracts) — next item, not started. Update this line to the active item at the start/end of each session.
+**Current focus:** [FND-04](backlog/P00-foundation.md#fnd-04--add-typed-configuration-provider-seams-and-controllable-time) — next item, not started. Update this line to the active item at the start/end of each session.
 
 ## Definition of Done
 
@@ -83,5 +83,6 @@ Phase delivery includes a runnable demonstration and a short explanation of what
 | 2026-10-01 | FND-01 done: solution layout `src/backend` + `src/frontend` + `src/aspire`, Aspire as local orchestrator (D19, ADR 0002) | Replaces the provisional `src/api` / `src/web` layout in plan.md §3 |
 | 2026-10-01 | FND-02 done: PostgreSQL 17 in the AppHost with persistent volume, Migrator project, default-schema tables for users, accounts and memberships (ADR 0003, D20) | Adds a fifth backend project (`Migrator`) to the FND-01 layout and decision D20 to plan.md |
 | 2026-10-02 | Scope change: FND-02 drops custom schemas (default `public`), the separate runtime/migration database roles (deferred to DEP-01) and `memberships.is_owner` (roles in P02/P08) | Project owner: not needed to learn the SaaS concepts at this stage. Updated plan.md D20/§4/§10, ADR 0003, FND-02 criteria/evidence, DEP-01 |
+| 2026-10-02 | FND-03 done: OpenAPI document + generated TypeScript types + ProblemDetails catalog (ADR 0004) | Contract-only endpoints answer 501; register has no duplicate-email 409 (anti-enumeration); `quota_exceeded` is a 409 |
 
 Record future scope changes here. Update dependency links, phase counts, traceability, and plan.md whenever items are added, split, removed, or completed.

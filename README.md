@@ -20,6 +20,7 @@ All code, identifiers, comments, tests and technical documentation are in Englis
 | .NET SDK | 10.0.401 (`rollForward: latestPatch`) | `global.json` |
 | Target framework | net10.0 | `Directory.Build.props` |
 | .NET Aspire (AppHost SDK + hosting packages) | 13.6.0 | AppHost `.csproj`, `Directory.Packages.props` |
+| OpenAPI / contract | Microsoft.AspNetCore.OpenApi 10.0.12, Scalar.AspNetCore 2.17.13, openapi-typescript 7.13.0 | `Directory.Packages.props`, `src/frontend/package.json` |
 | Test stack | xUnit 2.9.3, Microsoft.NET.Test.Sdk 18.10.1, Mvc.Testing 10.0.12 | `Directory.Packages.props` |
 | Node.js | 24.16.0 | `src/frontend/.nvmrc`, `engines` in `package.json` |
 | npm | 11.13.0 | `packageManager` in `package.json` |
@@ -78,6 +79,14 @@ npm run lint
 Warnings are treated as errors for the whole solution. The relational integration tests start a real
 PostgreSQL 17 container through Testcontainers, so **Docker must be running** (no other credentials are
 needed); they fail with an explicit message, and are never skipped, when Docker is unavailable.
+
+## API contract
+
+The OpenAPI document `docs/contracts/openapi.json` and the frontend types `src/frontend/src/api/schema.d.ts`
+are generated and committed. After changing an endpoint or DTO run `cd src/frontend && npm run contract:generate`;
+`npm run contract:check` and the `Contracts` integration tests fail when they drift. Conventions, endpoint list
+and the error-code catalog: [`docs/contracts/README.md`](docs/contracts/README.md). In Development the API
+serves `/openapi/v1.json` and a Scalar UI at `/scalar` (404 in every other environment).
 
 ## Running locally
 

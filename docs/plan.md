@@ -336,7 +336,7 @@ Required screens: register/login; project list/detail; report creation/history; 
 
 Capability responses guide UI availability, but the API reauthorizes execution and report download. Refetch capabilities and subscription state after a confirmed change and on account switching. Payment confirmation can use bounded polling; a websocket system is unnecessary.
 
-Endpoint families (exact DTOs are specified in FND-03):
+Endpoint families (the DTOs and error codes are specified in [`contracts/`](contracts/README.md), generated into OpenAPI by FND-03; see [ADR 0004](decisions/0004-api-contract-openapi-and-problem-details.md)):
 
 | Family | Representative routes |
 |---|---|
@@ -351,7 +351,7 @@ Endpoint families (exact DTOs are specified in FND-03):
 | Operator | /api/operator/contracts, /billing-events, /reconciliation; explicit platform permission |
 | Infrastructure | /health/live; /health/ready; protected or development-only API documentation |
 
-Use ProblemDetails with stable English machine codes. Distinguish unauthenticated 401, denied capability/permission 403, hidden foreign resource 404, business/concurrency conflict 409, throttling 429, and transient dependency failure 503. Do not use HTTP 429 for a contractual monthly quota merely because it is a limit; use a documented quota-exceeded business response. Preserve a correlation ID without exposing exception internals.
+Use ProblemDetails with stable English machine codes. Distinguish unauthenticated 401, denied capability/permission 403, hidden foreign resource 404, business/concurrency conflict 409, throttling 429, and transient dependency failure 503. Do not use HTTP 429 for a contractual monthly quota merely because it is a limit; use a documented quota-exceeded business response (409 with code `quota_exceeded`; a capability the plan does not include is 403 `capability_not_granted`). Registration never reveals whether an email already exists. Preserve a correlation ID without exposing exception internals.
 
 Client retries of mutations use idempotency keys where needed. Generate the TypeScript API client or equivalent contract checks from OpenAPI. Never include provider secrets, password hashes, raw reset/refresh tokens, or internal operator-only fields in general DTOs.
 

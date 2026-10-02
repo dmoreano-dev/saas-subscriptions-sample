@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "contract:generate": "dotnet build ../backend/Saas.Subscription.Sample.Api -p:GenerateOpenApiContract=true && npm run contract:types",
+    "contract:types": "openapi-typescript ../../docs/contracts/openapi.json -o src/api/schema.d.ts",
+    "contract:check": "openapi-typescript ../../docs/contracts/openapi.json -o src/api/schema.d.ts --check"
   },
   "dependencies": {
     "react": "^19.2.8",
@@ -18,6 +21,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "openapi-typescript": "7.13.0",
     "oxlint": "^1.81.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
@@ -26,5 +30,10 @@
     "node": ">=24.16.0 <25",
     "npm": ">=11"
   },
-  "packageManager": "npm@11.13.0"
+  "packageManager": "npm@11.13.0",
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
+  }
 }
