@@ -1,9 +1,9 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Saas.Subscription.Sample.IntegrationTests.Configuration;
 
 namespace Saas.Subscription.Sample.IntegrationTests;
 
-public class HealthEndpointTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class HealthEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private const string LivenessPath = "/health/live";
     private const string UnknownPath = "/does-not-exist";

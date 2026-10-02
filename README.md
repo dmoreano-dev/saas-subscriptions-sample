@@ -107,10 +107,29 @@ dotnet run --project src/aspire/Saas.Subscription.Sample.AppHost --launch-profil
 - Stop with Ctrl+C; the data survives in the volume. A Mailpit container is added to the AppHost by FND-05.
 
 You can also run pieces alone: `dotnet run --project src/backend/Saas.Subscription.Sample.Api`
-and `npm run dev` in `src/frontend` (the proxy falls back to `http://localhost:5282`).
+and `npm run dev` in `src/frontend` (the proxy falls back to `http://localhost:5282`). The API alone needs a
+database connection string even though it does not connect yet:
+`dotnet user-secrets set "ConnectionStrings:appdb" "<connection string>" --project src/backend/Saas.Subscription.Sample.Api`.
+
+## Configuration
+
+Seven typed option groups (`Database`, `Authentication`, `Billing`, `Email`, `Cache`, `Frontend`,
+`BackgroundWork`) live in `Application/Configuration` and are validated when the API starts; an incomplete or
+unsafe configuration stops it with a message that names the key (never the secret value). Only
+`ASPNETCORE_ENVIRONMENT=Development` is local; every other environment is **hosted** and gets the strict rules
+(simulator controls off, signing key present, TLS-verified database, HTTPS email provider and frontend URL).
+Rules and rationale: [ADR 0005](docs/decisions/0005-typed-configuration-and-hosted-startup-validation.md).
+
+- `appsettings.json` holds safe non-secret defaults; `appsettings.Development.json` the local ones.
+- [`appsettings.example.json`](src/backend/Saas.Subscription.Sample.Api/appsettings.example.json) lists every key
+  with placeholders (a test keeps it in step with the options). Hosted values go in environment variables
+  (`Authentication__SigningKey`); local secrets in `dotnet user-secrets` (the API has a `UserSecretsId`).
+- Business time comes from the injected `TimeProvider` (system clock by default, `FakeTimeProvider` in tests).
+- Seams are declared by the item that needs them: `IEmailSender` (FND-05), `IBillingGateway` (BIL-01), cache
+  (P05), password hashing (JWT-01).
 
 ## Secrets
 
-Never commit a real `.env`, JWT signing private key, provider API key or connection string. A single
-checked-in example configuration with placeholders is introduced with typed configuration (FND-04).
+Never commit a real `.env`, JWT signing private key, provider API key or connection string. The single
+checked-in example configuration with placeholders is `appsettings.example.json` (see Configuration).
 Keep raw tokens, hashes and secrets out of logs and DTOs.

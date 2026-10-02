@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Saas.Subscription.Sample.Api.Configuration;
 using Saas.Subscription.Sample.Api.Endpoints;
 using Saas.Subscription.Sample.Api.OpenApi;
 using Saas.Subscription.Sample.Api.Problems;
@@ -6,6 +7,7 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddAppConfiguration();
 builder.Services.AddHealthChecks();
 builder.Services.AddApiProblemHandling();
 builder.Services.AddOpenApi(ApiOpenApiOptions.DocumentName, ApiOpenApiOptions.Configure);

@@ -85,7 +85,7 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 
 ### FND-04 — Add typed configuration, provider seams, and controllable time
 
-**Status:** Todo · **Priority:** P0 · **Phase:** P00 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P0 · **Phase:** P00 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** [FND-01](#fnd-01--create-the-english-repository-and-modular-skeleton)
 
@@ -93,12 +93,21 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 
 **Acceptance criteria:**
 
-- [ ] Database, Authentication, Billing, Email, Cache, Frontend, and BackgroundWork options have validation and placeholder examples.
-- [ ] TimeProvider can be replaced in tests; simulator controls are explicitly gated and invalid hosted combinations fail startup.
+- [x] Database, Authentication, Billing, Email, Cache, Frontend, and BackgroundWork options have validation and placeholder examples.
+- [x] TimeProvider can be replaced in tests; simulator controls are explicitly gated and invalid hosted combinations fail startup.
 
 **Verification:** Configuration validation tests and deterministic time tests.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-02. Commit: `git log --grep FND-04`. Decisions: [ADR 0005](../decisions/0005-typed-configuration-and-hosted-startup-validation.md).
+
+- Verification: `dotnet build Saas.Subscription.Sample.slnx` → 0 warnings, 0 errors; `dotnet test` → 64/64 unit and 148/148 integration passed (no new test needs PostgreSQL; the 27 relational tests from FND-02 still run against real PostgreSQL 17).
+- Options: `Database`, `Authentication`, `Billing`, `Email`, `Cache`, `Frontend`, `BackgroundWork` in `Application/Configuration` with DataAnnotations plus one `IValidateOptions<T>` each; registered in `Api/Configuration` with `ValidateOnStart`. Placeholder example: `src/backend/Saas.Subscription.Sample.Api/appsettings.example.json`, compared with the options by `ExampleConfigurationTests`; secrets via user-secrets (`UserSecretsId`) or environment variables.
+- Startup rules (each a test that breaks one setting of a valid hosted profile and asserts the key named in the failure): hosted simulator controls, signing key and key id missing, database without `SSL Mode=VerifyFull`, SMTP email provider, Https email without API key, http or localhost frontend URL, wildcard origin; in every environment: Redis without connection string, Stripe without keys, `sk_live_` key, lease not longer than the poll interval. A valid hosted profile starts and answers `/health/live`; Development defaults start; a malformed connection string failure does not echo the password.
+- Time: `TimeProvider.System` registered with `TryAddSingleton`; integration tests resolve the system clock by default and a `FakeTimeProvider` (advanced deterministically) when replaced; unit tests drive `User`/`Account` timestamps from a `FakeTimeProvider` (`now` stays a parameter).
+- Mutation checks (reverted): disabling the hosted simulator rule and the hosted signing-key rule each failed the expected unit and integration tests.
+- Manual run (`dotnet run --no-launch-profile`): Development without a connection string and Production with an empty configuration both stop at startup (Production lists every missing key); Development with `ConnectionStrings__appdb` starts.
+- Limitations: only configuration is validated (no connectivity check, no `/health/ready` yet); the AppHost now passes the database reference to the API but the Aspire run itself was not exercised in this item; hosted = any environment other than `Development`; placeholder values satisfy presence checks; no seams were declared besides `TimeProvider` (IEmailSender → FND-05, IBillingGateway → BIL-01); `CorporateIdentity` options arrive with P10; no CI yet (FND-06).
+
 
 ### FND-05 — Set up local email capture
 

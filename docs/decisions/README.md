@@ -33,3 +33,4 @@ sessions don't re-litigate it. Keep each ADR short.
 | [0002](0002-solution-layout-and-aspire-orchestration.md) | Solution layout and Aspire as the local orchestrator | Accepted |
 | [0003](0003-postgresql-migrations-and-database-layout.md) | PostgreSQL migrations and database layout | Accepted |
 | [0004](0004-api-contract-openapi-and-problem-details.md) | API contract: OpenAPI as source, generated TypeScript types, ProblemDetails | Accepted |
+| [0005](0005-typed-configuration-and-hosted-startup-validation.md) | Typed configuration and hosted startup validation | Accepted |

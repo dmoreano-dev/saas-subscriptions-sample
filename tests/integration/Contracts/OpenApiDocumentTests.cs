@@ -1,14 +1,12 @@
 using System.Net;
 using System.Text.Json.Nodes;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Saas.Subscription.Sample.IntegrationTests.Configuration;
 
 namespace Saas.Subscription.Sample.IntegrationTests.Contracts;
 
-public class OpenApiDocumentTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class OpenApiDocumentTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private const string DocumentPath = "/openapi/v1.json";
-    private const string ProductionEnvironment = "Production";
     private const string RegenerateHint =
         "docs/contracts/openapi.json is out of date. Regenerate it and the TypeScript types with " +
         "`npm run contract:generate` in src/frontend, then commit both.";
@@ -34,7 +32,7 @@ public class OpenApiDocumentTests(WebApplicationFactory<Program> factory) : ICla
     public async Task Get_DocumentationRoute_OutsideDevelopment_ReturnsNotFound(string path)
     {
         // Arrange
-        using var client = factory.WithWebHostBuilder(builder => builder.UseEnvironment(ProductionEnvironment)).CreateClient();
+        using var client = HostedProfile.Create(factory).CreateClient();
 
         // Act
         using var response = await client.GetAsync(path);

@@ -1,16 +1,16 @@
 using System.Net;
 using System.Text;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Saas.Subscription.Sample.IntegrationTests.Configuration;
 using Saas.Subscription.Sample.Api.Problems;
 using Saas.Subscription.Sample.IntegrationTests.Problems;
 
 namespace Saas.Subscription.Sample.IntegrationTests.Contracts;
 
 /// <summary>
-/// The real API through <see cref="WebApplicationFactory{TEntryPoint}"/>. Every endpoint is contract-only
+/// The real API through <see cref="ApiFactory"/>. Every endpoint is contract-only
 /// until its phase, so each answers 501 with a problem body; no endpoint touches the database yet.
 /// </summary>
-public class ContractEndpointTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class ContractEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private const string AccountId = "0197c0de-0000-7000-8000-000000000001";
     private const string ProjectId = "0197c0de-0000-7000-8000-000000000002";

@@ -30,7 +30,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 
 | Phase | Items | Required | Done | Link |
 |---|---:|---:|---:|---|
-| P00 — Foundation | 6 | 6 | 3 | [Open](backlog/P00-foundation.md) |
+| P00 — Foundation | 6 | 6 | 4 | [Open](backlog/P00-foundation.md) |
 | P01 — JWT essentials | 6 | 6 | 0 | [Open](backlog/P01-jwt-essentials.md) |
 | P02 — Personal accounts and plans | 8 | 8 | 0 | [Open](backlog/P02-personal-accounts-and-plans.md) |
 | P03 — Billing integration | 8 | 8 | 0 | [Open](backlog/P03-billing-integration.md) |
@@ -45,7 +45,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | P12 — Full lab verification | 6 | 6 | 0 | [Open](backlog/P12-full-lab-verification.md) |
 | Optional — Conditional and future extensions | 4 | 0 | 0 | [Open](backlog/optional-extensions.md) |
 
-**Current focus:** [FND-04](backlog/P00-foundation.md#fnd-04--add-typed-configuration-provider-seams-and-controllable-time) — next item, not started. Update this line to the active item at the start/end of each session.
+**Current focus:** [FND-05](backlog/P00-foundation.md#fnd-05--set-up-local-email-capture) — next item, not started. Update this line to the active item at the start/end of each session.
 
 ## Definition of Done
 
@@ -86,3 +86,4 @@ Phase delivery includes a runnable demonstration and a short explanation of what
 | 2026-10-02 | FND-03 done: OpenAPI document + generated TypeScript types + ProblemDetails catalog (ADR 0004) | Contract-only endpoints answer 501; register has no duplicate-email 409 (anti-enumeration); `quota_exceeded` is a 409 |
 
 Record future scope changes here. Update dependency links, phase counts, traceability, and plan.md whenever items are added, split, removed, or completed.
+| 2026-10-02 | FND-04 done: typed options for seven groups validated at startup, hosted = any environment other than Development, `TimeProvider` registered and replaceable (ADR 0005) | The API now needs a database connection string to start (Aspire supplies it); no instance-count setting (single instance) |

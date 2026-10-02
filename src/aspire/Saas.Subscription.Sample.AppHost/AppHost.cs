@@ -12,14 +12,13 @@ var postgres = builder.AddPostgres("postgres", password: postgresPassword)
     .WithDataVolume("saas-sample-pgdata");
 var database = postgres.AddDatabase("appdb", "saas_sample");
 
-// Migrations are a controlled step that runs to completion, never part of the API's startup path.
-// For now a single database login is used for migrations and (later) the API; separate migration and
-// runtime roles are a hosted-database hardening step (DEP-01).
+// Migrations are a controlled step that runs to completion.
 var migrator = builder.AddProject<Projects.Saas_Subscription_Sample_Migrator>("migrator")
     .WithReference(database)
     .WaitFor(database);
 
 var api = builder.AddProject<Projects.Saas_Subscription_Sample_Api>("api")
+    .WithReference(database)
     .WaitForCompletion(migrator);
 
 // The Vite dev server proxies /api to the API using the service-discovery variables Aspire injects.

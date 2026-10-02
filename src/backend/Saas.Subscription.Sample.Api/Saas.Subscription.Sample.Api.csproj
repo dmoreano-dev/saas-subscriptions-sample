@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
+    <!-- Local secrets (signing key, provider keys) live in user-secrets, never in appsettings. -->
+    <UserSecretsId>saas-subscription-sample-api</UserSecretsId>
+
     <!--
       The committed OpenAPI document (docs/contracts/openapi.json) is regenerated only on request:
         dotnet build src/backend/Saas.Subscription.Sample.Api -p:GenerateOpenApiContract=true
