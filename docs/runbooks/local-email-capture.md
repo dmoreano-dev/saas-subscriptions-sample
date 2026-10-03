@@ -9,7 +9,7 @@ Local email never leaves the machine. `IEmailSender` (Application seam) is imple
    Docker must be running.
 2. Open the Aspire dashboard, find the `mailpit` resource and copy its `ui` endpoint (a dynamic port).
 3. Send the synthetic HTML + text message through the API (Development only, not in the OpenAPI contract):
-   `curl -X POST <api-url>/dev/email/test -H 'Content-Type: application/json' -d '{"to":"you@example.test"}'test`
+   `curl -X POST <api-url>/dev/email/test -H 'Content-Type: application/json' -d '{"to":"you@example.test"}'`
    (`202 Accepted`; an invalid address answers `400`).
 4. Open the Mailpit UI and check the HTML and Text tabs.
 
