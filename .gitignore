@@ -27,3 +27,7 @@ coverage/
 *.key
 appsettings.*.local.json
 secrets.json
+
+# Browser tests (Playwright)
+test-results/
+playwright-report/

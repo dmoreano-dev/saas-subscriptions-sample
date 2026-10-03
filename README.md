@@ -63,19 +63,17 @@ docs/
 
 ## Reproducing a clean build
 
-From a fresh clone, with the pinned .NET SDK and Node installed:
+From a fresh clone, with the pinned .NET SDK and Node installed (and Docker running):
 
 ```bash
-# Backend: restore, build, run all tests
-dotnet build Saas.Subscription.Sample.slnx
-dotnet test  Saas.Subscription.Sample.slnx
-
-# Frontend: reproducible install from the lockfile, production build, lint
-cd src/frontend
-npm ci
-npm run build
-npm run lint
+scripts/verify.sh all       # backend + frontend + secrets scan + dependency audit: exactly what CI runs
 ```
+
+Run one part with `scripts/verify.sh backend|frontend|secrets|dependencies`. The browser smoke test is local only:
+`scripts/verify.sh browser`. The underlying commands (`dotnet build`, `dotnet test`, `npm ci`, `npm run build`,
+`npm run lint`, `npm run contract:check`) can still be run by hand. What each check covers, fixture isolation,
+secret exclusion, formatting and dependency review: [`docs/runbooks/verification.md`](docs/runbooks/verification.md)
+and [ADR 0006](docs/decisions/0006-ci-and-verification-foundation.md).
 
 Warnings are treated as errors for the whole solution. The relational integration tests start a real
 PostgreSQL 17 container through Testcontainers, so **Docker must be running** (no other credentials are
@@ -133,4 +131,5 @@ Rules and rationale: [ADR 0005](docs/decisions/0005-typed-configuration-and-host
 
 Never commit a real `.env`, JWT signing private key, provider API key or connection string. The single
 checked-in example configuration with placeholders is `appsettings.example.json` (see Configuration).
+`scripts/verify.sh secrets` (gitleaks, also run in CI) scans the working tree and the full git history.
 Keep raw tokens, hashes and secrets out of logs and DTOs.

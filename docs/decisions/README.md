@@ -34,3 +34,4 @@ sessions don't re-litigate it. Keep each ADR short.
 | [0003](0003-postgresql-migrations-and-database-layout.md) | PostgreSQL migrations and database layout | Accepted |
 | [0004](0004-api-contract-openapi-and-problem-details.md) | API contract: OpenAPI as source, generated TypeScript types, ProblemDetails | Accepted |
 | [0005](0005-typed-configuration-and-hosted-startup-validation.md) | Typed configuration and hosted startup validation | Accepted |
+| [0006](0006-ci-and-verification-foundation.md) | CI and verification foundation | Accepted |

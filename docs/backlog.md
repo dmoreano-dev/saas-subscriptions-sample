@@ -45,7 +45,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | P12 — Full lab verification | 6 | 6 | 0 | [Open](backlog/P12-full-lab-verification.md) |
 | Optional — Conditional and future extensions | 4 | 0 | 0 | [Open](backlog/optional-extensions.md) |
 
-**Current focus:** [FND-06](backlog/P00-foundation.md#fnd-06--create-the-automated-verification-foundation) — next item, not started. Update this line to the active item at the start/end of each session.
+**Current focus:** [FND-06](backlog/P00-foundation.md#fnd-06--create-the-automated-verification-foundation) — implemented and verified locally; waiting for the first green GitHub CI run to mark it Done. Next independent item: [JWT-01](backlog/P01-jwt-essentials.md#jwt-01--implement-custom-users-and-password-credentials) (its dependencies FND-02 and FND-04 are Done). Update this line to the active item at the start/end of each session.
 
 ## Definition of Done
 
@@ -88,3 +88,4 @@ Phase delivery includes a runnable demonstration and a short explanation of what
 Record future scope changes here. Update dependency links, phase counts, traceability, and plan.md whenever items are added, split, removed, or completed.
 | 2026-10-02 | FND-04 done: typed options for seven groups validated at startup, hosted = any environment other than Development, `TimeProvider` registered and replaceable (ADR 0005) | The API now needs a database connection string to start (Aspire supplies it); no instance-count setting (single instance) |
 | 2026-10-02 | FND-05 done: `IEmailSender` seam, MailKit SMTP adapter, Mailpit container in the AppHost, Development-only `POST /dev/email/test` | `Email:Provider=Https` resolves a sender that throws until DEP-04; the test endpoint is excluded from the OpenAPI contract |
+| 2026-10-03 | FND-06 implemented, pending first CI run: GitHub Actions workflow, `scripts/verify.sh` entry point, gitleaks, Dependabot, local-only Playwright smoke test (ADR 0006) | Done count stays 5 until a green GitHub run is recorded; JWT-04 later adds the browser CI job |

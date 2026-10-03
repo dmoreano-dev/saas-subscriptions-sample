@@ -127,6 +127,7 @@ If the next item's dependencies are not all Done, say so and propose the correct
 ## Commands
 
 ```
+scripts/verify.sh all   # exactly what CI runs: backend, frontend, secrets scan, dependency audit (see docs/runbooks/verification.md)
 dotnet build Saas.Subscription.Sample.slnx
 dotnet test  Saas.Subscription.Sample.slnx
 dotnet run --project src/aspire/Saas.Subscription.Sample.AppHost --launch-profile https   # API + frontend

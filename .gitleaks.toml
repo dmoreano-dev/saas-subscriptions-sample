@@ -1,0 +1,6 @@
+# Extends the default gitleaks ruleset. Add an [allowlist] entry only for a value that is provably not a secret
+# (a placeholder or a throwaway test credential), and say why next to it.
+title = "saas-subscriptions-sample"
+
+[extend]
+useDefault = true
