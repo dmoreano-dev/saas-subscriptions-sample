@@ -111,7 +111,7 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 
 ### FND-05 — Set up local email capture
 
-**Status:** Todo · **Priority:** P1 · **Phase:** P00 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P1 · **Phase:** P00 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** [FND-01](#fnd-01--create-the-english-repository-and-modular-skeleton), [FND-04](#fnd-04--add-typed-configuration-provider-seams-and-controllable-time)
 
@@ -119,12 +119,21 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 
 **Acceptance criteria:**
 
-- [ ] A developer can inspect an HTML/text test message locally without sending to a real inbox.
-- [ ] SMTP host/port are configurable so MailDev can replace Mailpit; no application workflow depends on either product's UI/API.
+- [x] A developer can inspect an HTML/text test message locally without sending to a real inbox.
+- [x] SMTP host/port are configurable so MailDev can replace Mailpit; no application workflow depends on either product's UI/API.
 
 **Verification:** Send and inspect a synthetic message in the local capture service.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-02. Commit: `git log --grep FND-05`. Runbook: [local-email-capture](../runbooks/local-email-capture.md).
+
+- Verification: `dotnet build Saas.Subscription.Sample.slnx` → 0 warnings, 0 errors; `dotnet test` → 64/64 unit and 155/155 integration passed. `docs/contracts/openapi.json` unchanged (`contract:check` clean).
+- Seam and adapter: `IEmailSender.SendAsync(EmailMessage(To, Subject, HtmlBody, TextBody))` in `Application/Email`; `SmtpEmailSender` in `Infrastructure/Email` (MailKit 4.18.1, plain SMTP, `multipart/alternative`, sender from `EmailOptions`, transport failures → `DependencyUnavailableException`); registered by `AddEmail()` according to `Email:Provider`.
+- Automated: `SmtpEmailSenderTests` sends through a real Mailpit container (Testcontainers) and reads Mailpit's HTTP API **only in the test** to assert subject, sender, recipient and both the text and HTML parts; a closed port raises `DependencyUnavailableException`. `EmailSenderRegistrationTests` (no Docker): Development resolves the SMTP sender; hosted `Provider=Https` starts and resolves `UnavailableEmailSender`, whose send throws `DependencyUnavailableException`; `POST /dev/email/test` accepts a valid address, rejects an invalid one with 400, and is a 404 when hosted.
+- Manual run (AppHost, `--launch-profile https`): the `mailpit` container (`axllent/mailpit:v1.31.3`) started and the API received `Email__Smtp__Host/Port` from the AppHost; `POST /dev/email/test` → 202; Mailpit's API returned the message from `Subscription Lab <no-reply@saas-sample.invalid>` with the HTML and text bodies. This was the first Aspire run of the API with its dependencies; the Mailpit web UI was checked through its API, not visually in a browser.
+- MailDev: swapping needs only the image and ports in `AppHost.cs`; not exercised (no MailDev run). No application workflow depends on either product's UI/API.
+- Limitations: no hosted adapter (DEP-04); `Provider=Https` starts but sending fails with a 503-class error until then, so a deploy before DEP-04 has broken email (the readiness check for the operator, planned for the hosted demo, should surface it); no outbox, templates, resend limits or real messages (P06+); no TLS/authentication on the SMTP adapter by design; the MIME builder is covered only through the Mailpit test (internal to Infrastructure); image tag is pinned in both the AppHost and the test fixture and must be kept in sync.
+
+
 
 ### FND-06 — Create the automated verification foundation
 

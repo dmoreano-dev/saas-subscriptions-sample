@@ -28,7 +28,8 @@ All code, identifiers, comments, tests and technical documentation are in Englis
 | Docker | Docker Engine/Desktop, any current version (verified with 29.7.2) | required for local PostgreSQL and the relational tests (FND-02) |
 | PostgreSQL | major **17** (assumed Supabase major; confirm when the Supabase project exists) | `WithImageTag("17")` in the AppHost, `postgres:17` in `tests/integration` |
 | EF Core / Npgsql | EF Core 10.0.12 (`dotnet-ef` tool), Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3, EFCore.NamingConventions 10.0.1 | `Directory.Packages.props`, `.config/dotnet-tools.json` |
-| Testcontainers | Testcontainers.PostgreSql 4.15.0 | `Directory.Packages.props` |
+| Testcontainers | Testcontainers.PostgreSql / Testcontainers 4.15.0 | `Directory.Packages.props` |
+| Email | MailKit 4.18.1 (SMTP adapter); Mailpit `axllent/mailpit:v1.31.3` (local capture) | `Directory.Packages.props`, `AppHost.cs`, `tests/integration/Email/MailpitFixture.cs` |
 
 NuGet package versions are managed centrally in `Directory.Packages.props`; do not put versions in `.csproj` files.
 
@@ -104,7 +105,7 @@ dotnet run --project src/aspire/Saas.Subscription.Sample.AppHost --launch-profil
 - PostgreSQL 17 runs in a container with the persistent volume `saas-sample-pgdata`; the Migrator runs to
   completion before the API starts. The database password is generated once into the AppHost's user secrets. Docker must be running. See [`docs/runbooks/database-migrations.md`](docs/runbooks/database-migrations.md)
   (reset, inspect, add a migration, run the Migrator by hand).
-- Stop with Ctrl+C; the data survives in the volume. A Mailpit container is added to the AppHost by FND-05.
+- Stop with Ctrl+C; the data survives in the volume. The AppHost also runs a Mailpit container that captures local email (nothing is delivered); see [`docs/runbooks/local-email-capture.md`](docs/runbooks/local-email-capture.md).
 
 You can also run pieces alone: `dotnet run --project src/backend/Saas.Subscription.Sample.Api`
 and `npm run dev` in `src/frontend` (the proxy falls back to `http://localhost:5282`). The API alone needs a
@@ -125,7 +126,7 @@ Rules and rationale: [ADR 0005](docs/decisions/0005-typed-configuration-and-host
   with placeholders (a test keeps it in step with the options). Hosted values go in environment variables
   (`Authentication__SigningKey`); local secrets in `dotnet user-secrets` (the API has a `UserSecretsId`).
 - Business time comes from the injected `TimeProvider` (system clock by default, `FakeTimeProvider` in tests).
-- Seams are declared by the item that needs them: `IEmailSender` (FND-05), `IBillingGateway` (BIL-01), cache
+- Seams are declared by the item that needs them: `IEmailSender` (FND-05, done), `IBillingGateway` (BIL-01), cache
   (P05), password hashing (JWT-01).
 
 ## Secrets
