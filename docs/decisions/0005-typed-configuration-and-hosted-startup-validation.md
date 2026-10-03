@@ -23,7 +23,8 @@ real-money keys, SMTP capture as delivery) must be impossible to deploy by accid
 - **Validation checks configuration, not reachability.** Nothing connects to PostgreSQL, Stripe or SMTP at
   startup; readiness checks come later.
 - **Rules that fail startup**
-  - Hosted only: `Billing:Simulator:ControlsEnabled=true`; missing `Authentication:SigningKey`/`SigningKeyId`;
+  - Hosted only: `Billing:Simulator:ControlsEnabled=true`; missing `Authentication:SigningKey`/`SigningKeyId`
+    (extended to every environment, and to an unusable key, by [ADR 0009](0009-access-token-signing-and-validation.md));
     `Database:ConnectionString` without `SSL Mode=VerifyFull`; `Email:Provider=Smtp`; non-https or local
     `Frontend:BaseUrl`/`AllowedOrigins`.
   - Every environment: `Cache:Provider=Redis` without a connection string; `Billing:Provider=Stripe` without

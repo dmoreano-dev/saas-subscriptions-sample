@@ -37,3 +37,4 @@ sessions don't re-litigate it. Keep each ADR short.
 | [0006](0006-ci-and-verification-foundation.md) | CI and verification foundation | Accepted |
 | [0007](0007-password-hashing-and-credential-storage.md) | Password hashing and credential storage | Accepted |
 | [0008](0008-registration-enumeration-and-login-throttling.md) | Registration without enumeration, generic login and in-memory login throttle | Accepted |
+| [0009](0009-access-token-signing-and-validation.md) | Access tokens: ES256 signing key, claims and validation rules | Accepted |

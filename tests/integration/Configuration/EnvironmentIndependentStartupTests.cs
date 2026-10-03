@@ -14,6 +14,9 @@ public class EnvironmentIndependentStartupTests(ApiFactory factory) : IClassFixt
     }
 
     [Theory]
+    [InlineData("Authentication:SigningKey", "", "Authentication:SigningKey")]
+    [InlineData("Authentication:SigningKey", "not-a-pem-key", "Authentication:SigningKey")]
+    [InlineData("Authentication:SigningKeyId", "", "Authentication:SigningKeyId")]
     [InlineData("Cache:Provider", "Redis", "Cache:Redis:ConnectionString")]
     [InlineData("Billing:Provider", "Stripe", "Billing:Stripe:SecretKey")]
     [InlineData("Billing:Stripe:SecretKey", "sk_live_example", "Billing:Stripe:SecretKey")]

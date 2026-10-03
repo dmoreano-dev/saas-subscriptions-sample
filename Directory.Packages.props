@@ -30,6 +30,12 @@
     <PackageVersion Include="Geralt" Version="4.4.0" />
   </ItemGroup>
 
+  <ItemGroup Label="Access tokens (JWT issuance and bearer validation)">
+    <!-- Keep Microsoft.IdentityModel.* on the version the JwtBearer package depends on; mixing versions is unsupported. -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.2" />
+  </ItemGroup>
+
   <ItemGroup Label="Typed configuration">
     <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.12" />
   </ItemGroup>

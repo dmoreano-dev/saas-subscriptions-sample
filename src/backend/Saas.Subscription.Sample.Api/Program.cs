@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Saas.Subscription.Sample.Api.Authentication;
 using Saas.Subscription.Sample.Api.Configuration;
 using Saas.Subscription.Sample.Api.Endpoints;
 using Saas.Subscription.Sample.Api.OpenApi;
@@ -15,6 +16,7 @@ builder.Services.AddEmail();
 builder.Services.AddPasswordHashing();
 builder.Services.AddPersistence();
 builder.Services.AddIdentityServices();
+builder.Services.AddApiAuthentication();
 builder.Services.AddHealthChecks();
 builder.Services.AddApiProblemHandling();
 builder.Services.AddOpenApi(ApiOpenApiOptions.DocumentName, ApiOpenApiOptions.Configure);
@@ -22,6 +24,8 @@ builder.Services.AddOpenApi(ApiOpenApiOptions.DocumentName, ApiOpenApiOptions.Co
 var app = builder.Build();
 
 app.UseApiProblemHandling();
+app.UseAuthentication();
+app.UseAuthorization();
 
 // The document and its UI describe the whole API surface, so they exist only in local development.
 if (app.Environment.IsDevelopment())

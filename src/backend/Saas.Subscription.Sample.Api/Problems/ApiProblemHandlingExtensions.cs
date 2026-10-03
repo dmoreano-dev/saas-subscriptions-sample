@@ -28,7 +28,7 @@ public static class ApiProblemHandlingExtensions
     /// <summary>
     /// Order matters: the correlation id first so every later response carries it, then the exception handler,
     /// then status-code pages, which give a problem body to bare 4xx/5xx results (including the 401/403 that
-    /// the authentication middleware will produce in P01).
+    /// the authentication middleware produces).
     /// </summary>
     public static IApplicationBuilder UseApiProblemHandling(this IApplicationBuilder app)
     {

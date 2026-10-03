@@ -8,6 +8,9 @@ namespace Saas.Subscription.Sample.Api.Endpoints;
 
 public static class AuthEndpoints
 {
+    private const string BearerTokenType = "Bearer";
+    private const string NoStore = "no-store";
+
     public static void MapAuthEndpoints(this RouteGroupBuilder api)
     {
         var auth = api.MapGroup("/auth")
@@ -23,7 +26,7 @@ public static class AuthEndpoints
             .Produces<RegisterResponse>(StatusCodes.Status201Created)
             .ProducesValidationProblem();
 
-        auth.MapPost("/login", (LoginRequest request) => ApiProblems.NotImplemented())
+        auth.MapPost("/login", LoginAsync)
             .WithName("Login")
             .WithSummary("Exchanges credentials for a short-lived access token. Failures are always the generic invalid_credentials.")
             .Produces<LoginResponse>()
@@ -49,6 +52,64 @@ public static class AuthEndpoints
             new UserDto(registered.UserId, registered.Email, registered.CreatedAt),
             new AccountSummary(registered.PersonalAccountId, registered.PersonalAccountName, AccountType.Personal, AccountStatus.Active));
         return Results.Json(response, statusCode: StatusCodes.Status201Created);
+    }
+
+    private static async Task<IResult> LoginAsync(
+        LoginRequest request,
+        ILoginService login,
+        IAccessTokenIssuer tokens,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        var errors = ValidateLogin(request);
+        if (errors.Count > 0)
+        {
+            return ApiProblems.Validation(errors);
+        }
+
+        var result = await login.LoginAsync(request.Email, request.Password, cancellationToken);
+        if (result.Outcome == LoginOutcome.Throttled)
+        {
+            return ApiProblems.RateLimited(result.RetryAfter ?? TimeSpan.Zero);
+        }
+
+        if (result.Outcome != LoginOutcome.Succeeded || result.Identity is null)
+        {
+            return ApiProblems.Unauthenticated(ProblemCodes.InvalidCredentials);
+        }
+
+        var identity = result.Identity;
+        var token = tokens.Issue(identity.UserId);
+
+        // A token is a bearer secret: no cache between the API and the browser may keep this response.
+        httpContext.Response.Headers.CacheControl = NoStore;
+
+        return Results.Ok(new LoginResponse(
+            token.Value,
+            BearerTokenType,
+            token.ExpiresAt,
+            new UserDto(identity.UserId, identity.Email, identity.CreatedAt)));
+    }
+
+    /// <summary>
+    /// Only "was something sent": what the email or password look like is not checked here, so a malformed value
+    /// gets the same generic <c>invalid_credentials</c> as a wrong one.
+    /// </summary>
+    private static Dictionary<string, string[]> ValidateLogin(LoginRequest request)
+    {
+        var errors = new Dictionary<string, string[]>();
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            errors["email"] = ["Email is required."];
+        }
+
+        if (string.IsNullOrEmpty(request.Password))
+        {
+            errors["password"] = ["Password is required."];
+        }
+
+        return errors;
     }
 
     private static Dictionary<string, string[]> ValidateRegistration(RegisterRequest request)

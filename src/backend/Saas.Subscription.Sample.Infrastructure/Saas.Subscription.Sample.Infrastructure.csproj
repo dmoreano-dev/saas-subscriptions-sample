@@ -4,6 +4,7 @@
     <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Geralt" />
     <PackageReference Include="MailKit" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
   </ItemGroup>
 

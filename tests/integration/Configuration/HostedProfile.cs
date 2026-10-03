@@ -11,8 +11,8 @@ public static class HostedProfile
     private static readonly Dictionary<string, string> ValidSettings = new()
     {
         ["Database:ConnectionString"] = "Host=db.example.test;Database=app;Username=app;Password=secret;SSL Mode=VerifyFull",
-        ["Authentication:SigningKey"] = "test-signing-key",
-        ["Authentication:SigningKeyId"] = "test-key-id",
+        ["Authentication:SigningKey"] = TestSigningKey.Pem,
+        ["Authentication:SigningKeyId"] = TestSigningKey.KeyId,
         ["Email:Provider"] = "Https",
         ["Email:Https:ApiKey"] = "test-email-api-key",
         ["Frontend:BaseUrl"] = "https://app.example.test",

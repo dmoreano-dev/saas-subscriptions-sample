@@ -1,11 +1,9 @@
-using Saas.Subscription.Sample.Api.OpenApi;
-
 namespace Saas.Subscription.Sample.Api.Endpoints;
 
 /// <summary>
-/// Maps the contract-only endpoint families. Handlers answer 501 until the phase that owns each family
-/// replaces them (identity P01, accounts/capabilities P02, projects P02). Routes, DTOs and documented
-/// responses are the contract and must not change when that happens.
+/// Maps the endpoint families. A family that is still contract-only answers 501 until the phase that owns it
+/// replaces the handlers (accounts/capabilities P02, projects P02). Routes, DTOs and documented responses are the
+/// contract and must not change when that happens.
 /// </summary>
 public static class ApiEndpoints
 {
@@ -15,9 +13,9 @@ public static class ApiEndpoints
 
         api.MapAuthEndpoints();
 
-        // Everything below needs a bearer token (documentation only until P01 enforces it).
+        // Everything below needs a valid access token, including the handlers that still answer 501.
         var authenticated = api.MapGroup(string.Empty)
-            .WithMetadata(BearerAuthenticationRequirement.Instance)
+            .RequireAuthorization()
             .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         authenticated.MapMeEndpoints();

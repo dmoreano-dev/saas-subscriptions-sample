@@ -23,6 +23,7 @@ public class HostedStartupTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [Theory]
     [InlineData("Billing:Simulator:ControlsEnabled", "true", "Billing:Simulator:ControlsEnabled")]
     [InlineData("Authentication:SigningKey", "", "Authentication:SigningKey")]
+    [InlineData("Authentication:SigningKey", "not-a-pem-key", "Authentication:SigningKey")]
     [InlineData("Authentication:SigningKeyId", "", "Authentication:SigningKeyId")]
     [InlineData("Database:ConnectionString", "Host=h;Database=d;Username=u;Password=p", "SSL Mode=VerifyFull")]
     [InlineData("Database:ConnectionString", "Host=h;Database=d;Username=u;Password=p;SSL Mode=Require", "SSL Mode=VerifyFull")]
@@ -56,5 +57,20 @@ public class HostedStartupTests(ApiFactory factory) : IClassFixture<ApiFactory>
 
         // Assert
         Assert.DoesNotContain(password, failure, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Start_UnusableSigningKey_DoesNotEchoTheKey()
+    {
+        // Arrange
+        const string unusableKey = "do-not-leak-this-signing-key";
+        using var hosted = HostedProfile.Create(factory, ("Authentication:SigningKey", unusableKey));
+
+        // Act
+        var failure = StartupFailure.Describe(() => hosted.CreateClient().Dispose());
+
+        // Assert
+        Assert.NotEmpty(failure);
+        Assert.DoesNotContain(unusableKey, failure, StringComparison.Ordinal);
     }
 }

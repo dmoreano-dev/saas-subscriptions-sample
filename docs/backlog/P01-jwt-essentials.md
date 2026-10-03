@@ -60,7 +60,7 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 
 ### JWT-03 — Issue and validate short-lived bearer JWTs
 
-**Status:** Todo · **Priority:** P0 · **Phase:** P01 · **Suggested model:** Opus / high
+**Status:** Done · **Priority:** P0 · **Phase:** P01 · **Suggested model:** Opus / high
 
 **Dependencies:** [JWT-02](#jwt-02--implement-personal-registration-and-credential-login), [FND-04](P00-foundation.md#fnd-04--add-typed-configuration-provider-seams-and-controllable-time)
 
@@ -68,12 +68,23 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 
 **Acceptance criteria:**
 
-- [ ] Tokens have sub, jti, issuer, audience, issued/expiry times, a 10-minute baseline lifetime, and a persistent configured signing key.
-- [ ] Reject unsigned/tampered tokens, invalid algorithms/issuer/audience/time claims, and missing subject; no session or refresh tables are introduced.
+- [x] Tokens have sub, jti, issuer, audience, issued/expiry times, a 10-minute baseline lifetime, and a persistent configured signing key.
+- [x] Reject unsigned/tampered tokens, invalid algorithms/issuer/audience/time claims, and missing subject; no session or refresh tables are introduced.
 
 **Verification:** Negative token matrix plus restart test with stable signing material.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-03. Commit: `git log --grep JWT-03`. Decisions: [ADR 0009](../decisions/0009-access-token-signing-and-validation.md).
+
+- Verification: `scripts/verify.sh all` → exit 0 (format, build with warnings as errors, 168 unit and 265 integration tests passed against real PostgreSQL 17 through Testcontainers, contract check unchanged, gitleaks, NuGet and npm audit).
+- Signing key: ES256, `Authentication:SigningKey` is an unencrypted P-256 private key in PEM (`\n` accepted as line breaks), `SigningKeyId` is the `kid`. Missing or unusable material stops the API at startup in every environment (not only hosted) and is never generated; the failure names the setting, not the value. Validation uses a public-only copy of the key.
+- Issuance: `JwtAccessTokenIssuer` (`JsonWebTokenHandler`, IdentityModel 8.19.2) writes exactly `iss`, `aud`, `sub`, `jti`, `iat`, `nbf`, `exp` from the injected `TimeProvider`; `exp = iat + AccessTokenLifetime` (10 minutes).
+- Validation: `AddJwtBearer` with allow-list `[ES256]`, signed tokens required, key matched by `kid` only, exact issuer and audience, expiry required, explicit 30-second clock skew evaluated on the injected clock, then `sub` (a user id) and `jti` required. Refusals answer 401 `unauthenticated` with a bare `WWW-Authenticate: Bearer`.
+- Endpoints: every `/api` route outside `/api/auth/*` requires the token (OpenAPI security derived from that metadata; the committed contract did not change). `POST /api/auth/login` returns the token (`Cache-Control: no-store`), 401 `invalid_credentials` for any credential failure and 429 with `Retry-After` when throttled. `GET /api/me` returns the profile read by `sub`, 401 if the user does not exist or is disabled. Account and project routes stay 501 behind the token.
+- Negative matrix over HTTP through the real pipeline (`tests/integration/Identity/AccessTokenValidationTests`, tokens built by hand, each differing from an accepted control in one way): `alg: none`, signature removed, signature tampered, payload tampered, signed with another key, unknown `kid`, no `kid`, HS256 with the public key as secret, ES384 from another curve, wrong/missing issuer, wrong/missing audience, expired, no expiry, not yet valid, `nbf` after `exp`, missing subject, subject that is not a user id, missing `jti`, garbage tokens and a valid token under another scheme. Controls: the same forge without changes, and tokens exactly at `exp + skew` / `nbf - skew`, are accepted. An issued token is accepted at +630 s and refused at +631 s (fake clock).
+- Restart (`MeEndpointTests`, real PostgreSQL): a token from a login on one host is accepted by a new host with the same key, and refused by a new host with a different key. Login over HTTP against PostgreSQL: token shape and claims, different `jti` per login, identical generic failure for wrong password / unknown email / malformed email / disabled user, 429 after five failures even with the right password, field validation.
+- No session or refresh tables: this item adds no migration; `MigrationTests` still pins the table list.
+- Mutation checks (reverted), each failed the listed tests: no audience validation 2, no issuer validation 2, try all keys 2, 5-minute skew 1, unsigned allowed 2, no subject/`jti` check 3, `jti` not required 1, no `RequireAuthorization` 40 (including the OpenAPI document test), `/me` ignoring user status 1, throttle answered as invalid credentials 1, lifetime ignoring the option 2. Removing the algorithm allow-list failed **no** HTTP test (the EC key itself refuses HS256/ES384), so the allow-list is pinned only by a unit test of the parameters; `ValidateLifetime = false` is not observable because the lifetime delegate takes precedence.
+- Limitations: one active key, no rotation (changing it signs everyone out); no revocation: a token stays valid until `exp` after logout or after the user is disabled, except on `GET /api/me` (P06); `jti` is not stored; the first local run needs the key created by hand (README "Signing key"); `npm run contract:generate` fails on a machine without full API configuration (it starts the API as a hosted environment; already the case before this item for the database, frontend and email settings) — not needed here because the contract is unchanged, but it must be fixed before the next contract change; request-size limits and log redaction are JWT-05; no hosted/Render evidence yet (the "not regenerated on restart" claim is proven in-process, the hosted check belongs to P05).
 
 ### JWT-04 — Build the React JWT-only login experience
 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
@@ -30,7 +31,7 @@ public static class ApiOpenApiOptions
 
             document.Components ??= new OpenApiComponents();
             document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
-            document.Components.SecuritySchemes[BearerAuthenticationRequirement.SchemeName] = new OpenApiSecurityScheme
+            document.Components.SecuritySchemes[BearerSecurityScheme.Name] = new OpenApiSecurityScheme
             {
                 Type = SecuritySchemeType.Http,
                 Scheme = "bearer",
@@ -42,8 +43,9 @@ public static class ApiOpenApiOptions
 
         options.AddOperationTransformer((operation, context, _) =>
         {
+            // Derived from the real authorization metadata, so the document cannot claim more or less than is enforced.
             var requiresBearer = context.Description.ActionDescriptor.EndpointMetadata
-                .OfType<BearerAuthenticationRequirement>()
+                .OfType<IAuthorizeData>()
                 .Any();
 
             if (requiresBearer)
@@ -52,7 +54,7 @@ public static class ApiOpenApiOptions
                 [
                     new OpenApiSecurityRequirement
                     {
-                        [new OpenApiSecuritySchemeReference(BearerAuthenticationRequirement.SchemeName, context.Document)] = [],
+                        [new OpenApiSecuritySchemeReference(BearerSecurityScheme.Name, context.Document)] = [],
                     },
                 ];
             }
