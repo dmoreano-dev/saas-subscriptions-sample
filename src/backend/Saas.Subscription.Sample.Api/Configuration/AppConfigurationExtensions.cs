@@ -23,6 +23,7 @@ public static class AppConfigurationExtensions
             .Configure<IConfiguration>((options, configuration) =>
                 options.ConnectionString ??= configuration.GetConnectionString(DatabaseOptions.AspireConnectionName));
         services.AddValidatedOptions<AuthenticationOptions, AuthenticationOptionsValidator>(AuthenticationOptions.SectionName);
+        services.AddValidatedOptions<PasswordHashingOptions, PasswordHashingOptionsValidator>(PasswordHashingOptions.SectionName);
         services.AddValidatedOptions<BillingOptions, BillingOptionsValidator>(BillingOptions.SectionName);
         services.AddValidatedOptions<EmailOptions, EmailOptionsValidator>(EmailOptions.SectionName);
         services.AddValidatedOptions<CacheOptions, CacheOptionsValidator>(CacheOptions.SectionName);

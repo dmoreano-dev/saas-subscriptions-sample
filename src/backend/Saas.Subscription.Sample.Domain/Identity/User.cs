@@ -21,6 +21,8 @@ public sealed class User
     /// </summary>
     public string NormalizedEmail { get; private set; } = null!;
 
+    public UserStatus Status { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -30,6 +32,7 @@ public sealed class User
         Id = Guid.CreateVersion7(now),
         Email = email.Trim(),
         NormalizedEmail = EmailNormalizer.Normalize(email),
+        Status = UserStatus.Active,
         CreatedAt = now,
         UpdatedAt = now,
     };

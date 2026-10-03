@@ -11,14 +11,18 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         // Defense in-depth: EmailNormalizer already canonicalizes in code, but this keeps the unique index
         // from being bypassed by writes that skip the domain (raw SQL, seeds, imports).
         builder.ToTable("users", table =>
+        {
             table.HasCheckConstraint(
                 "ck_users_normalized_email",
-                "normalized_email <> '' AND normalized_email = lower(btrim(normalized_email))"));
+                "normalized_email <> '' AND normalized_email = lower(btrim(normalized_email))");
+            table.HasCheckConstraint("ck_users_status", "status IN ('Active', 'Disabled')");
+        });
 
         builder.HasKey(user => user.Id);
         builder.Property(user => user.Id).ValueGeneratedNever();
         builder.Property(user => user.Email).HasMaxLength(320).IsRequired();
         builder.Property(user => user.NormalizedEmail).HasMaxLength(320).IsRequired();
+        builder.Property(user => user.Status).HasConversion<string>().HasMaxLength(32).HasDefaultValue(UserStatus.Active).IsRequired();
         builder.Property(user => user.CreatedAt).IsRequired();
         builder.Property(user => user.UpdatedAt).IsRequired();
 

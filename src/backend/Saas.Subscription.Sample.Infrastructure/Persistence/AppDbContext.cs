@@ -8,6 +8,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 {
     public DbSet<User> Users => Set<User>();
 
+    public DbSet<PasswordCredential> PasswordCredentials => Set<PasswordCredential>();
+
     public DbSet<Account> Accounts => Set<Account>();
 
     public DbSet<Membership> Memberships => Set<Membership>();

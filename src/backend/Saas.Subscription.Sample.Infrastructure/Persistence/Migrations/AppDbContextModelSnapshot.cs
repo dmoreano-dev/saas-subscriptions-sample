@@ -123,6 +123,49 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                     b.ToTable("memberships", (string)null);
                 });
 
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Identity.PasswordCredential", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("Algorithm")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("algorithm");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EncodedHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("encoded_hash");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_password_credentials");
+
+                    b.ToTable("password_credentials", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_password_credentials_algorithm", "algorithm IN ('argon2id')");
+
+                            t.HasCheckConstraint("ck_password_credentials_encoded_hash", "encoded_hash <> ''");
+                        });
+                });
+
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Identity.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -145,6 +188,14 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(320)")
                         .HasColumnName("normalized_email");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Active")
+                        .HasColumnName("status");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -165,6 +216,8 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                     b.ToTable("users", null, t =>
                         {
                             t.HasCheckConstraint("ck_users_normalized_email", "normalized_email <> '' AND normalized_email = lower(btrim(normalized_email))");
+
+                            t.HasCheckConstraint("ck_users_status", "status IN ('Active', 'Disabled')");
                         });
                 });
 
@@ -192,6 +245,16 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_memberships_users_user_id");
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Identity.PasswordCredential", b =>
+                {
+                    b.HasOne("Saas.Subscription.Sample.Domain.Identity.User", null)
+                        .WithOne()
+                        .HasForeignKey("Saas.Subscription.Sample.Domain.Identity.PasswordCredential", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_password_credentials_users_user_id");
                 });
 #pragma warning restore 612, 618
         }

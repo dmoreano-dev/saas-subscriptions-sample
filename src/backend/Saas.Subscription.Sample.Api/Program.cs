@@ -4,12 +4,14 @@ using Saas.Subscription.Sample.Api.Endpoints;
 using Saas.Subscription.Sample.Api.OpenApi;
 using Saas.Subscription.Sample.Api.Problems;
 using Saas.Subscription.Sample.Infrastructure.Email;
+using Saas.Subscription.Sample.Infrastructure.Identity;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAppConfiguration();
 builder.Services.AddEmail();
+builder.Services.AddPasswordHashing();
 builder.Services.AddHealthChecks();
 builder.Services.AddApiProblemHandling();
 builder.Services.AddOpenApi(ApiOpenApiOptions.DocumentName, ApiOpenApiOptions.Configure);
