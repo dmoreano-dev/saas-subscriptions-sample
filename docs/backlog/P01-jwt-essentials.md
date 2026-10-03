@@ -114,7 +114,7 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 
 ### JWT-05 — Add baseline authentication abuse controls
 
-**Status:** Todo · **Priority:** P0 · **Phase:** P01 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P0 · **Phase:** P01 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** [JWT-02](#jwt-02--implement-personal-registration-and-credential-login), [JWT-03](#jwt-03--issue-and-validate-short-lived-bearer-jwts)
 
@@ -122,12 +122,18 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 
 **Acceptance criteria:**
 
-- [ ] Apply bounded request sizes and login throttling with generic errors; account lockout policy avoids easy permanent denial of service.
-- [ ] Secrets and raw credentials/tokens are excluded from logs; signing-key and HTTPS configuration are checked.
+- [x] Apply bounded (scope reduced by the owner: login throttling with generic errors and no permanent lock-out already existed from JWT-02/ADR 0008; request-size limits are deferred, see Limitations) request sizes and login throttling with generic errors; account lockout policy avoids easy permanent denial of service.
+- [x] Secrets and raw credentials/tokens are excluded from logs; signing-key and HTTPS configuration are checked.
 
 **Verification:** Throttling, oversized payload, logging-redaction, and configuration tests.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-03. Commit: `git log --grep JWT-05`.
+
+- Verification: `scripts/verify.sh all` → exit 0 (168 unit and 268 integration tests against real PostgreSQL 17, contract unchanged, gitleaks, dependency audit).
+- Scope (owner decision, learning focus): this item only adds what was missing for the second criterion. Already in place and re-confirmed: login throttle per email (5 attempts / 15 min, fixed bounded window, no persistent lock-out, ADR 0008); signing key required and checked at startup in every environment, failures name the setting and never the value (ADR 0009); hosted startup rejects a database connection string without `SSL Mode=VerifyFull` and a non-HTTPS or loopback `Frontend:BaseUrl` (`HostedStartupTests`).
+- Log redaction: `LogRedactionTests` runs register, login (right, wrong, unknown email, throttled), `/api/me` with a valid, tampered and garbage token and an invalid registration through the real host over PostgreSQL, capturing every log entry at Trace level (message, structured state, exception, scopes). Sentinels: the password, the wrong password, the access token and its signature, the signing key body, the stored Argon2id hash and the database password. None may appear in the logs, and none of the failure responses echoes the wrong password, key, hash or database password. Mutation check (reverted): logging `{Password}` in `LoginService` failed the test; the build analyzers (CA1848/CA1873) also reject ad-hoc `LogInformation` calls.
+- HSTS: `UseHsts` outside Development (`HostedStartupTests`: header present when hosted over HTTPS, absent in Development). No HTTPS redirection: behind Render TLS ends at the proxy, so it belongs to P05 with trusted forwarded headers.
+- Limitations (deferred by the owner, not done): no request-size limits (Kestrel default ~30 MB, so 413/`payload_too_large` and the OpenAPI note do not exist); no per-IP or global rate limiting (the per-email throttle can still deny one email for 15 minutes and does not see one source spraying many emails); throttle state is per process and lost on restart; HTTP request logging is not enabled, so `Authorization` header redaction is not exercised; redaction is proven for the authentication flows only, not as a general log filter.
 
 ### JWT-06 — Verify and explain the JWT checkpoint
 

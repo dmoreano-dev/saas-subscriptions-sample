@@ -73,4 +73,31 @@ public class HostedStartupTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.NotEmpty(failure);
         Assert.DoesNotContain(unusableKey, failure, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task Get_HostedEnvironmentOverHttps_SendsStrictTransportSecurity()
+    {
+        // Arrange
+        using var hosted = HostedProfile.Create(factory);
+        using var client = hosted.CreateClient(new() { BaseAddress = new Uri("https://app.example.test") });
+
+        // Act
+        using var response = await client.GetAsync(LivenessPath);
+
+        // Assert
+        Assert.True(response.Headers.Contains("Strict-Transport-Security"));
+    }
+
+    [Fact]
+    public async Task Get_DevelopmentEnvironment_DoesNotSendStrictTransportSecurity()
+    {
+        // Arrange
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
+
+        // Act
+        using var response = await client.GetAsync(LivenessPath);
+
+        // Assert
+        Assert.False(response.Headers.Contains("Strict-Transport-Security"));
+    }
 }

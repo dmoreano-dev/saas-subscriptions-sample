@@ -23,6 +23,11 @@ builder.Services.AddOpenApi(ApiOpenApiOptions.DocumentName, ApiOpenApiOptions.Co
 
 var app = builder.Build();
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 app.UseApiProblemHandling();
 app.UseAuthentication();
 app.UseAuthorization();

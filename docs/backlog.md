@@ -31,7 +31,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | Phase | Items | Required | Done | Link |
 |---|---:|---:|---:|---|
 | P00 — Foundation | 6 | 6 | 6 | [Open](backlog/P00-foundation.md) |
-| P01 — JWT essentials | 6 | 6 | 4 | [Open](backlog/P01-jwt-essentials.md) |
+| P01 — JWT essentials | 6 | 6 | 5 | [Open](backlog/P01-jwt-essentials.md) |
 | P02 — Personal accounts and plans | 8 | 8 | 0 | [Open](backlog/P02-personal-accounts-and-plans.md) |
 | P03 — Billing integration | 8 | 8 | 0 | [Open](backlog/P03-billing-integration.md) |
 | P04 — Subscription lifecycle | 8 | 8 | 0 | [Open](backlog/P04-subscription-lifecycle.md) |
@@ -45,7 +45,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | P12 — Full lab verification | 6 | 6 | 0 | [Open](backlog/P12-full-lab-verification.md) |
 | Optional — Conditional and future extensions | 4 | 0 | 0 | [Open](backlog/optional-extensions.md) |
 
-**Current focus:** [JWT-05](backlog/P01-jwt-essentials.md#jwt-05--add-baseline-authentication-abuse-controls) — next item, not started (JWT-04 is done, pending owner review). Update this line to the active item at the start/end of each session.
+**Current focus:** [JWT-06](backlog/P01-jwt-essentials.md#jwt-06--verify-and-explain-the-jwt-checkpoint) — next item, not started (JWT-05 is done with reduced scope, pending owner review). Update this line to the active item at the start/end of each session.
 
 ## Definition of Done
 
@@ -92,3 +92,4 @@ Record future scope changes here. Update dependency links, phase counts, traceab
 | 2026-10-03 | JWT-01 done: Argon2id (Geralt/libsodium) behind `IPasswordHasher`, `password_credentials` table, `users.status`, 5–50 character policy (ADR 0007) | EF's migration lock does not serialize concurrent Migrators (found with a second migration): the FND-02 concurrency test and claim were withdrawn, P05 must guarantee a single run; minimum length 5 is a lab value |
 | 2026-10-03 | JWT-02 done: atomic registration (user + credential + personal account + owner membership), decoy 201 for duplicate emails, generic credential login service, dummy-hash verification, rehash on login, in-memory per-email login throttle (ADR 0008) | `POST /api/auth/login` stays 501 until JWT-03 (no token yet); the API now opens a database connection (`AddPersistence`); throttle is per process and per email only, JWT-05 owns the rest |
 | 2026-10-03 | JWT-03 done: ES256 access tokens (persistent PEM key + `kid`), bearer validation with a 30-second clock skew, `POST /api/auth/login` and `GET /api/me` implemented, every other `/api` route behind the token (ADR 0009) | The signing key is now required in every environment, not only hosted (ADR 0005 amended): a local run needs it in user-secrets; `contract:generate` cannot start the API without full configuration (pre-existing, to fix before the next contract change) |
+| 2026-10-03 | JWT-05 done with reduced scope: log-redaction test over the real host and HSTS outside Development; the rest of the criteria were already met (throttle ADR 0008, key and hosted TLS validators) | Owner deferred request-size limits and per-IP rate limiting (not useful for the learning goal yet); revisit near the end or at P05 hosting |
