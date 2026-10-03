@@ -131,6 +131,8 @@ Hosted: set `Authentication__SigningKey` (the PEM; line breaks may be written as
 line) and `Authentication__SigningKeyId` as secret environment variables, once, and reuse them across deploys.
 Changing the key signs everyone out. Tests generate a throwaway key per run.
 
+What a token proves, what logout does and does not do, and a step-by-step demo: [`docs/runbooks/jwt-checkpoint.md`](docs/runbooks/jwt-checkpoint.md).
+
 ## Configuration
 
 Seven typed option groups (`Database`, `Authentication`, `Billing`, `Email`, `Cache`, `Frontend`,

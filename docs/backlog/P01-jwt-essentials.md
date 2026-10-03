@@ -122,10 +122,10 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 
 **Acceptance criteria:**
 
-- [x] Apply bounded (scope reduced by the owner: login throttling with generic errors and no permanent lock-out already existed from JWT-02/ADR 0008; request-size limits are deferred, see Limitations) request sizes and login throttling with generic errors; account lockout policy avoids easy permanent denial of service.
+- [x] Login throttling with generic errors; account lockout policy avoids easy permanent denial of service. Expensive work is bounded by input validation (email ≤ 254, password 5–50 characters, checked before any Argon2id work). An explicit HTTP request-size limit is moved out of this item (see Limitations).
 - [x] Secrets and raw credentials/tokens are excluded from logs; signing-key and HTTPS configuration are checked.
 
-**Verification:** Throttling, oversized payload, logging-redaction, and configuration tests.
+**Verification:** Throttling, logging-redaction, and configuration tests. The oversized-payload test moves with the request-size limit (see Limitations).
 
 **Evidence:** 2026-10-03. Commit: `git log --grep JWT-05`.
 
@@ -133,11 +133,12 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 - Scope (owner decision, learning focus): this item only adds what was missing for the second criterion. Already in place and re-confirmed: login throttle per email (5 attempts / 15 min, fixed bounded window, no persistent lock-out, ADR 0008); signing key required and checked at startup in every environment, failures name the setting and never the value (ADR 0009); hosted startup rejects a database connection string without `SSL Mode=VerifyFull` and a non-HTTPS or loopback `Frontend:BaseUrl` (`HostedStartupTests`).
 - Log redaction: `LogRedactionTests` runs register, login (right, wrong, unknown email, throttled), `/api/me` with a valid, tampered and garbage token and an invalid registration through the real host over PostgreSQL, capturing every log entry at Trace level (message, structured state, exception, scopes). Sentinels: the password, the wrong password, the access token and its signature, the signing key body, the stored Argon2id hash and the database password. None may appear in the logs, and none of the failure responses echoes the wrong password, key, hash or database password. Mutation check (reverted): logging `{Password}` in `LoginService` failed the test; the build analyzers (CA1848/CA1873) also reject ad-hoc `LogInformation` calls.
 - HSTS: `UseHsts` outside Development (`HostedStartupTests`: header present when hosted over HTTPS, absent in Development). No HTTPS redirection: behind Render TLS ends at the proxy, so it belongs to P05 with trusted forwarded headers.
-- Limitations (deferred by the owner, not done): no request-size limits (Kestrel default ~30 MB, so 413/`payload_too_large` and the OpenAPI note do not exist); no per-IP or global rate limiting (the per-email throttle can still deny one email for 15 minutes and does not see one source spraying many emails); throttle state is per process and lost on restart; HTTP request logging is not enabled, so `Authorization` header redaction is not exercised; redaction is proven for the authentication flows only, not as a general log filter.
+- Input bounds: register validates email and password length in the endpoint and the hasher refuses an out-of-policy password; login discards over-long email or password before the throttle and before any hash (`LoginService`, `Argon2idPasswordHasher`). A huge body therefore cannot force expensive hashing; it only costs Kestrel's default body read (~30 MB).
+- Moved out of this item (owner decision, learning focus; revisit near the end of the lab or at P05 hosting): an explicit request-size limit with 413/`payload_too_large`, its OpenAPI note and the oversized-payload test; per-IP or global rate limiting; persistent/shared throttle state; HTTP request logging and `Authorization` redaction. Known consequences: the per-email throttle can deny one email for 15 minutes, does not see one source spraying many emails, and is lost on restart; log redaction is proven for the authentication flows only.
 
 ### JWT-06 — Verify and explain the JWT checkpoint
 
-**Status:** Todo · **Priority:** P0 · **Phase:** P01 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P0 · **Phase:** P01 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** [JWT-04](#jwt-04--build-the-react-jwt-only-login-experience), [JWT-05](#jwt-05--add-baseline-authentication-abuse-controls), [FND-06](P00-foundation.md#fnd-06--create-the-automated-verification-foundation)
 
@@ -145,9 +146,15 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 
 **Acceptance criteria:**
 
-- [ ] Tests prove unauthorized requests fail and valid tokens reach only protected operations allowed at this stage.
-- [ ] Document the distinction between token validation, user persistence, client logout, and future server revocation; record the P01 demonstration.
+- [x] Tests prove unauthorized requests fail and valid tokens reach only protected operations allowed at this stage.
+- [x] Document the distinction between token validation, user persistence, client logout, and future server revocation; record the P01 demonstration.
 
 **Verification:** Run the JWT regression suite and capture a reproducible demo checklist.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-03. Commit: `git log --grep JWT-06`.
+
+- Verification: `scripts/verify.sh all` → exit 0 (168 unit and 283 integration tests against PostgreSQL 17, contract unchanged, gitleaks, dependency audit); `scripts/verify.sh browser` → 11 Playwright tests passed.
+- Gap closed: before this item only `GET /api/accounts` was probed with bad tokens. `ProtectedSurfaceTests` (15 tests) now reads the real endpoint table: the anonymous routes are exactly `POST /api/auth/register` and `/login`; the protected routes equal an explicit list for this stage (a new route without a decision fails the build); every protected route answers 401 `unauthenticated` without a token; the six contract-only account/project routes answer 501 `not_implemented` with a valid token (it reaches the handler, never data). `/api/me` with a valid token stays covered by `MeEndpointTests` (needs the user in PostgreSQL).
+- Mutation check (reverted): mapping the project endpoints outside the authorized group failed 6 of the 15 tests.
+- Documentation: [`docs/runbooks/jwt-checkpoint.md`](../runbooks/jwt-checkpoint.md) separates token validation (stateless), user persistence (PostgreSQL, only `/me` reads it), client logout (drops the in-memory token) and server revocation (does not exist before P06); it states that a copied token stays valid until `exp` (10 minutes) and records the reproducible demo checklist (register → login → `/me` → logout → copied token → reload → expiry) with the automated equivalents. Linked from the README and the runbooks index.
+- Limitations: the demo checklist was written from the tests and the code, not walked by hand in a browser in this session (the Playwright run covers the same steps); JWT-05 extras (request-size limit and oversized-payload test, per-IP limiting, request-log redaction) remain moved to the end of the lab and are listed in the runbook.

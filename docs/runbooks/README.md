@@ -8,3 +8,4 @@ See [plan.md §13](../plan.md) for the required list.
 |---|---|
 | [Database migrations and roles](database-migrations.md) | FND-02 (hosted section completed in DEP-01) |
 | [Local email capture (Mailpit)](local-email-capture.md) | FND-05 (hosted adapter in DEP-04) |
+| [JWT checkpoint and demo checklist](jwt-checkpoint.md) | JWT-06 |
