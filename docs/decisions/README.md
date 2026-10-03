@@ -38,3 +38,4 @@ sessions don't re-litigate it. Keep each ADR short.
 | [0007](0007-password-hashing-and-credential-storage.md) | Password hashing and credential storage | Accepted |
 | [0008](0008-registration-enumeration-and-login-throttling.md) | Registration without enumeration, generic login and in-memory login throttle | Accepted |
 | [0009](0009-access-token-signing-and-validation.md) | Access tokens: ES256 signing key, claims and validation rules | Accepted |
+| [0010](0010-plan-catalog-immutability-and-seed.md) | Plan catalog: trigger-enforced immutability and Migrator seed | Accepted |

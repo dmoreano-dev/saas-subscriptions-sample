@@ -20,6 +20,7 @@ public class MigrationTests(PostgresFixture postgres)
         WHERE table_schema = 'public' AND table_name <> '__EFMigrationsHistory'
           AND (column_name = 'id' OR column_name LIKE '%\_id')
           AND data_type <> 'uuid'
+          AND column_name <> 'external_price_id' -- opaque provider reference, not one of our keys
         """;
 
     private const string TimestampColumnsThatAreNotTimestamptzQuery = """
@@ -57,7 +58,7 @@ public class MigrationTests(PostgresFixture postgres)
         // Assert
         await using var connection = await Sql.OpenAsync(database.ConnectionString);
         var tables = await Sql.ColumnAsync(connection, TableNamesQuery);
-        Assert.Equal(["__EFMigrationsHistory", "accounts", "memberships", "password_credentials", "users"], tables);
+        Assert.Equal(["__EFMigrationsHistory", "accounts", "feature_definitions", "memberships", "password_credentials", "plan_capabilities", "plan_prices", "plan_versions", "plans", "users"], tables);
     }
 
     [Fact]

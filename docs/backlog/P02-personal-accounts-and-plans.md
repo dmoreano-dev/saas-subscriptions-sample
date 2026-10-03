@@ -6,7 +6,7 @@ Deliver the complete personal-account model first, using PostgreSQL-backed autho
 
 ### ENT-01 — Create the versioned plan and price catalog
 
-**Status:** Todo · **Priority:** P0 · **Phase:** P02 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P0 · **Phase:** P02 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** [JWT-06](P01-jwt-essentials.md#jwt-06--verify-and-explain-the-jwt-checkpoint), [FND-02](P00-foundation.md#fnd-02--establish-postgresql-migrations-and-account-foundations)
 
@@ -14,12 +14,18 @@ Deliver the complete personal-account model first, using PostgreSQL-backed autho
 
 **Acceptance criteria:**
 
-- [ ] Published versions are immutable once referenced; monthly/annual prices are distinct from capabilities and external price IDs.
-- [ ] Free works without a Stripe customer or subscription; capability keys, value types, limits, and quota units are explicit.
+- [x] Published versions are immutable once referenced; monthly/annual prices are distinct from capabilities and external price IDs.
+- [x] Free works without a Stripe customer or subscription; capability keys, value types, limits, and quota units are explicit.
 
 **Verification:** Seed idempotency, version immutability, and catalog query tests.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-03. Commit: `git log --grep ENT-01`. Decision: [ADR 0010](../decisions/0010-plan-catalog-immutability-and-seed.md).
+
+- Verification: `dotnet build Saas.Subscription.Sample.slnx` → 0 warnings, 0 errors; `dotnet test` → 177/177 unit and 320/320 integration passed (real PostgreSQL 17 through Testcontainers); `has-pending-model-changes` test passes (no drift).
+- Schema (migration `AddPlanCatalog`): `feature_definitions`, `plans`, `plan_versions`, `plan_capabilities`, `plan_prices`; immutability of published versions is enforced by two PostgreSQL triggers; value shapes by CHECK constraints.
+- Seed: `DatabaseMigrator.SeedCatalogAsync` (called by the Migrator after migrations): 7 features, 4 plans (v1 published), 18 capabilities, 3 monthly prices (Pro 1000, Max 3000, Enterprise 20000, USD minor units). Annual prices are not seeded (plan §2: added later).
+- Tests (`tests/integration/Persistence/PlanCatalogTests.cs`, `tests/unit/Catalog`): first seed inserts the fixtures; second run inserts nothing and leaves an md5 fingerprint of versions/capabilities/prices unchanged even with a different clock; a tampered published version is reported as a divergence and not rewritten; UPDATE/DELETE of published versions, capabilities and prices, and inserts into or moves out of a published version are rejected (`55000`); drafts are editable until published; a new version leaves v1 untouched; duplicate version number, Published without timestamp, not-exactly-one value, negative limit, limit without unit, bad interval/currency/amount, duplicate interval+currency and empty external id are rejected; unlimited is accepted; monthly and annual prices share one capability package;  Free has no prices and no provider/customer/subscription column exists; `CatalogReader` returns published plans with limits, units and prices, ignoring drafts.
+- Limitations: value/type matching, immutable feature type/unit and Free-has-no-prices are not enforced by the database (trigger versions were tried and dropped as too heavy; the seed and domain keep them); concurrent seeds are not supported (no lock; single Migrator run); no mutation check was run on the triggers beyond the tests that disable/replace them; `GET /api/plans` and the OpenAPI contract are unchanged (deferred to ENT-08/ENT-03, so `contract:generate` was not needed); a superuser can disable a trigger (the seed divergence report is the second defence); `external_price_id` is never populated (no provider yet); no subscription references exist yet, so "referenced" is enforced as "published"; the Migrator seed was exercised through tests, not by a manual Aspire run.
 
 ### ENT-02 — Implement account-scoped permissions and resource isolation
 

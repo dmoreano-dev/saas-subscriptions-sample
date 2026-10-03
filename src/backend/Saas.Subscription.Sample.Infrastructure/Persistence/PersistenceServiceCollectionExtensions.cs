@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using Saas.Subscription.Sample.Application.Catalog;
 using Saas.Subscription.Sample.Application.Configuration;
+using Saas.Subscription.Sample.Infrastructure.Persistence.Catalog;
 
 namespace Saas.Subscription.Sample.Infrastructure.Persistence;
 
@@ -26,6 +28,8 @@ public static class PersistenceServiceCollectionExtensions
                 .UseNpgsql(connectionString, npgsql => npgsql.CommandTimeout(database.CommandTimeoutSeconds))
                 .UseSnakeCaseNamingConvention();
         });
+
+        services.AddScoped<ICatalogReader, CatalogReader>();
 
         return services;
     }

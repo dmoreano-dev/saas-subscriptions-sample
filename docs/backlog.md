@@ -32,7 +32,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 |---|---:|---:|---:|---|
 | P00 — Foundation | 6 | 6 | 6 | [Open](backlog/P00-foundation.md) |
 | P01 — JWT essentials | 6 | 6 | 6 | [Open](backlog/P01-jwt-essentials.md) |
-| P02 — Personal accounts and plans | 8 | 8 | 0 | [Open](backlog/P02-personal-accounts-and-plans.md) |
+| P02 — Personal accounts and plans | 8 | 8 | 1 | [Open](backlog/P02-personal-accounts-and-plans.md) |
 | P03 — Billing integration | 8 | 8 | 0 | [Open](backlog/P03-billing-integration.md) |
 | P04 — Subscription lifecycle | 8 | 8 | 0 | [Open](backlog/P04-subscription-lifecycle.md) |
 | P05 — Memory cache and first hosted demo | 11 | 11 | 0 | [Open](backlog/P05-memory-cache-and-hosted-demo.md) |
@@ -45,7 +45,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | P12 — Full lab verification | 6 | 6 | 0 | [Open](backlog/P12-full-lab-verification.md) |
 | Optional — Conditional and future extensions | 4 | 0 | 0 | [Open](backlog/optional-extensions.md) |
 
-**Current focus:** [ENT-01](backlog/P02-personal-accounts-and-plans.md#ent-01--create-the-versioned-plan-and-price-catalog) — next item, not started (P01 complete; the JWT-05 extras were moved to the end of the lab). Update this line to the active item at the start/end of each session.
+**Current focus:** [ENT-02](backlog/P02-personal-accounts-and-plans.md#ent-02--implement-account-scoped-permissions-and-resource-isolation) — next item, not started (ENT-01 done). Update this line to the active item at the start/end of each session.
 
 ## Definition of Done
 
@@ -94,3 +94,4 @@ Record future scope changes here. Update dependency links, phase counts, traceab
 | 2026-10-03 | JWT-03 done: ES256 access tokens (persistent PEM key + `kid`), bearer validation with a 30-second clock skew, `POST /api/auth/login` and `GET /api/me` implemented, every other `/api` route behind the token (ADR 0009) | The signing key is now required in every environment, not only hosted (ADR 0005 amended): a local run needs it in user-secrets; `contract:generate` cannot start the API without full configuration (pre-existing, to fix before the next contract change) |
 | 2026-10-03 | JWT-05 done with criteria narrowed: log-redaction test over the real host and HSTS outside Development; throttle (ADR 0008), key and hosted TLS validators already existed; expensive work is bounded by input validation before hashing | Owner moved the explicit request-size limit (413 + oversized-payload test), per-IP rate limiting and request-log redaction to the end of the lab (revisit near the end or at P05 hosting); the acceptance criterion and verification line were edited accordingly |
 | 2026-10-03 | JWT-06 done (P01 complete, 6/6): `ProtectedSurfaceTests` (every `/api` route but register/login needs a token; a valid token only reaches 501 handlers on contract-only routes), JWT checkpoint runbook with the concept split and demo checklist | Demo checklist not walked by hand (Playwright covers the same steps); copied token valid until `exp` is documented, revocation is P06 |
+| 2026-10-03 | ENT-01 done: versioned plan/price catalog (`plans`, `plan_versions`, `plan_capabilities`, `plan_prices`, `feature_definitions`), PostgreSQL triggers for published-version immutability, idempotent seed in the Migrator (ADR 0010) | `GET /api/plans` deferred; annual prices not seeded; immutability is by "published" because no subscriptions exist yet |

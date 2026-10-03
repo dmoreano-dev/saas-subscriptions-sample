@@ -123,6 +123,221 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                     b.ToTable("memberships", (string)null);
                 });
 
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.FeatureDefinition", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("key");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("unit");
+
+                    b.Property<string>("ValueType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("value_type");
+
+                    b.HasKey("Key")
+                        .HasName("pk_feature_definitions");
+
+                    b.ToTable("feature_definitions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_feature_definitions_limit_has_unit", "(value_type = 'Limit') = (unit IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_feature_definitions_unit", "unit IS NULL OR unit IN ('Projects', 'Reports', 'Seats')");
+
+                            t.HasCheckConstraint("ck_feature_definitions_value_type", "value_type IN ('Boolean', 'Limit')");
+                        });
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.Plan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AccountType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("account_type");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsBillable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_billable");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("key");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_plans");
+
+                    b.HasIndex("Key")
+                        .IsUnique()
+                        .HasDatabaseName("ux_plans_key");
+
+                    b.ToTable("plans", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_plans_account_type", "account_type IN ('Personal', 'Organization')");
+                        });
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanCapability", b =>
+                {
+                    b.Property<Guid>("PlanVersionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plan_version_id");
+
+                    b.Property<string>("FeatureKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("feature_key");
+
+                    b.Property<bool?>("BoolValue")
+                        .HasColumnType("boolean")
+                        .HasColumnName("bool_value");
+
+                    b.Property<bool>("IsUnlimited")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_unlimited");
+
+                    b.Property<int?>("LimitValue")
+                        .HasColumnType("integer")
+                        .HasColumnName("limit_value");
+
+                    b.HasKey("PlanVersionId", "FeatureKey")
+                        .HasName("pk_plan_capabilities");
+
+                    b.HasIndex("FeatureKey")
+                        .HasDatabaseName("ix_plan_capabilities_feature_key");
+
+                    b.ToTable("plan_capabilities", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_plan_capabilities_limit_value", "limit_value IS NULL OR limit_value >= 0");
+
+                            t.HasCheckConstraint("ck_plan_capabilities_one_value", "(bool_value IS NOT NULL)::int + (limit_value IS NOT NULL)::int + is_unlimited::int = 1");
+                        });
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanPrice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<string>("ExternalPriceId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("external_price_id");
+
+                    b.Property<string>("Interval")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("interval");
+
+                    b.Property<Guid>("PlanVersionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plan_version_id");
+
+                    b.Property<int>("UnitAmountMinor")
+                        .HasColumnType("integer")
+                        .HasColumnName("unit_amount_minor");
+
+                    b.HasKey("Id")
+                        .HasName("pk_plan_prices");
+
+                    b.HasIndex("PlanVersionId", "Interval", "Currency")
+                        .IsUnique()
+                        .HasDatabaseName("ux_plan_prices_plan_version_id_interval_currency");
+
+                    b.ToTable("plan_prices", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_plan_prices_currency", "currency ~ '^[A-Z]{3}$'");
+
+                            t.HasCheckConstraint("ck_plan_prices_external_price_id", "external_price_id IS NULL OR external_price_id <> ''");
+
+                            t.HasCheckConstraint("ck_plan_prices_interval", "interval IN ('Month', 'Year')");
+
+                            t.HasCheckConstraint("ck_plan_prices_unit_amount_minor", "unit_amount_minor > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plan_id");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_plan_versions");
+
+                    b.HasIndex("PlanId", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("ux_plan_versions_plan_id_version");
+
+                    b.ToTable("plan_versions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_plan_versions_published_at", "(status = 'Published') = (published_at IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_plan_versions_status", "status IN ('Draft', 'Published')");
+
+                            t.HasCheckConstraint("ck_plan_versions_version", "version >= 1");
+                        });
+                });
+
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Identity.PasswordCredential", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -247,6 +462,43 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_memberships_users_user_id");
                 });
 
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanCapability", b =>
+                {
+                    b.HasOne("Saas.Subscription.Sample.Domain.Catalog.FeatureDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("FeatureKey")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_plan_capabilities_feature_definitions_feature_key");
+
+                    b.HasOne("Saas.Subscription.Sample.Domain.Catalog.PlanVersion", null)
+                        .WithMany("Capabilities")
+                        .HasForeignKey("PlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_plan_capabilities_plan_versions_plan_version_id");
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanPrice", b =>
+                {
+                    b.HasOne("Saas.Subscription.Sample.Domain.Catalog.PlanVersion", null)
+                        .WithMany("Prices")
+                        .HasForeignKey("PlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_plan_prices_plan_versions_plan_version_id");
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanVersion", b =>
+                {
+                    b.HasOne("Saas.Subscription.Sample.Domain.Catalog.Plan", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_plan_versions_plans_plan_id");
+                });
+
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Identity.PasswordCredential", b =>
                 {
                     b.HasOne("Saas.Subscription.Sample.Domain.Identity.User", null)
@@ -255,6 +507,13 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_password_credentials_users_user_id");
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanVersion", b =>
+                {
+                    b.Navigation("Capabilities");
+
+                    b.Navigation("Prices");
                 });
 #pragma warning restore 612, 618
         }
