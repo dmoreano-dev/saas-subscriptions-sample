@@ -33,7 +33,7 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 
 ### JWT-02 — Implement personal registration and credential login
 
-**Status:** Todo · **Priority:** P0 · **Phase:** P01 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P0 · **Phase:** P01 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** [JWT-01](#jwt-01--implement-custom-users-and-password-credentials), [FND-03](P00-foundation.md#fnd-03--define-api-and-frontend-contracts)
 
@@ -41,12 +41,22 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 
 **Acceptance criteria:**
 
-- [ ] Registration atomically creates user, personal account, and owner membership; retries/conflicts cannot leave partial accounts.
-- [ ] Login returns an authenticated application identity only after credential verification; errors do not expose hashes or distinguish unknown accounts unnecessarily.
+- [x] Registration atomically creates user, personal account, and owner membership; retries/conflicts cannot leave partial accounts. *(Also creates the password credential in the same transaction.)*
+- [x] Login returns an authenticated application identity only after credential verification; errors do not expose hashes or distinguish unknown accounts unnecessarily. *(Service level: `ILoginService` returns an `AuthenticatedIdentity`; the HTTP endpoint is wired with the token in JWT-03.)*
 
 **Verification:** Registration rollback, duplicate requests, and valid/invalid credential integration tests.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-03. Commit: `git log --grep JWT-02`. Decisions: [ADR 0008](../decisions/0008-registration-enumeration-and-login-throttling.md).
+
+- Verification: `scripts/verify.sh all` → exit 0 (format, build with warnings as errors, 130 unit and 203 integration tests passed against real PostgreSQL 17 through Testcontainers, contract check unchanged, gitleaks, NuGet and npm audit).
+- Registration: `RegistrationService` saves user, `password_credentials`, personal account and owner membership in one `SaveChanges` (one transaction) after hashing; no existence check, the unique index on the normalized email decides. `POST /api/auth/register` validates with `EmailPolicy` (≤254, plain shape) and `PasswordPolicy` and answers 201 with no token.
+- Duplicates: a unique violation on `ux_users_normalized_email` rolls back and returns a decoy (new ids, same shape), so the endpoint answers the same 201 for a new and an existing email (decision A in ADR 0008); the password is hashed exactly once in both paths.
+- Login: `LoginService` returns `Succeeded(AuthenticatedIdentity)`, `InvalidCredentials` or `Throttled`; unknown email, wrong password, no credential row and a `Disabled` user are the same result and each performs exactly one `Verify` (dummy hash when there is no credential); `SucceededRehashNeeded` replaces only the verified hash and never fails the login.
+- Throttle: `InMemoryLoginThrottle`, per normalized email (known or not), 5 attempts per fixed 15-minute window taken before the check, released by a success, passive expiry (no worker), capped at 10 000 keys.
+- Persistence: `AddPersistence()` registers `AppDbContext` from the `Database` options; the API connects to PostgreSQL for the first time here.
+- PostgreSQL tests (`tests/integration/Identity`): complete rows and links, the hash is stored and the password is not, rollback of all four tables when a trigger makes the membership insert fail (and the failure is not mistaken for a duplicate), duplicate registrations (case/whitespace variants) leave the original untouched, 8 concurrent registrations of one email create exactly one complete account and one winner who can log in, valid and invalid logins, equal generic result for the four failure kinds, exactly one verification per attempt, rehash from a weaker work factor (and no rewrite when current), throttling (including unknown emails, window expiry and reset on success), and the HTTP endpoint (201 shape without token, same status/shape for duplicates, field validation errors). Unit tests: email policy and the throttle with `FakeTimeProvider`.
+- Mutation checks (reverted): skipping the dummy verification failed 2 tests, accepting a `Disabled` user 1, not releasing the throttle on success 1, treating every `DbUpdateException` as a duplicate 1 (rollback test), and a separate first save of the user 7.
+- Limitations: `POST /api/auth/login` still answers 501 (no token until JWT-03); the throttle is per process and per email only (no per-IP limit, no request-size limit, no lock-out policy, no log redaction: JWT-05) and can be used to deny one email for 15 minutes; response-time equality is argued from the code path (one hash per attempt), not measured; the decoy 201 leaves a person who registers an existing email without feedback until P06; the personal account name is the constant `Personal` (users have no display name); the rehash concurrency guard (`WHERE encoded_hash = <verified>`) has no dedicated concurrent test.
 
 ### JWT-03 — Issue and validate short-lived bearer JWTs
 

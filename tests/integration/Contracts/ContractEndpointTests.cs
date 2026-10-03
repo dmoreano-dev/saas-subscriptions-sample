@@ -7,8 +7,9 @@ using Saas.Subscription.Sample.IntegrationTests.Problems;
 namespace Saas.Subscription.Sample.IntegrationTests.Contracts;
 
 /// <summary>
-/// The real API through <see cref="ApiFactory"/>. Every endpoint is contract-only
-/// until its phase, so each answers 501 with a problem body; no endpoint touches the database yet.
+/// The real API through <see cref="ApiFactory"/>. Every endpoint not yet implemented is contract-only, so it
+/// answers 501 with a problem body; registration is implemented and covered against a real database in
+/// <c>Identity/RegisterEndpointTests</c>.
 /// </summary>
 public class ContractEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
@@ -19,7 +20,6 @@ public class ContractEndpointTests(ApiFactory factory) : IClassFixture<ApiFactor
     private const string JsonMediaType = "application/json";
 
     [Theory]
-    [InlineData("POST", "/api/auth/register", CredentialsJson)]
     [InlineData("POST", "/api/auth/login", CredentialsJson)]
     [InlineData("GET", "/api/me", null)]
     [InlineData("GET", "/api/accounts", null)]

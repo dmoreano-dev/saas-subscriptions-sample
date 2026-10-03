@@ -31,7 +31,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | Phase | Items | Required | Done | Link |
 |---|---:|---:|---:|---|
 | P00 — Foundation | 6 | 6 | 6 | [Open](backlog/P00-foundation.md) |
-| P01 — JWT essentials | 6 | 6 | 1 | [Open](backlog/P01-jwt-essentials.md) |
+| P01 — JWT essentials | 6 | 6 | 2 | [Open](backlog/P01-jwt-essentials.md) |
 | P02 — Personal accounts and plans | 8 | 8 | 0 | [Open](backlog/P02-personal-accounts-and-plans.md) |
 | P03 — Billing integration | 8 | 8 | 0 | [Open](backlog/P03-billing-integration.md) |
 | P04 — Subscription lifecycle | 8 | 8 | 0 | [Open](backlog/P04-subscription-lifecycle.md) |
@@ -45,7 +45,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | P12 — Full lab verification | 6 | 6 | 0 | [Open](backlog/P12-full-lab-verification.md) |
 | Optional — Conditional and future extensions | 4 | 0 | 0 | [Open](backlog/optional-extensions.md) |
 
-**Current focus:** [JWT-02](backlog/P01-jwt-essentials.md#jwt-02--implement-personal-registration-and-credential-login) — next item, not started (JWT-01 is done, pending owner review). Update this line to the active item at the start/end of each session.
+**Current focus:** [JWT-03](backlog/P01-jwt-essentials.md#jwt-03--issue-and-validate-short-lived-bearer-jwts) — next item, not started (JWT-02 is done, pending owner review). Update this line to the active item at the start/end of each session.
 
 ## Definition of Done
 
@@ -90,3 +90,4 @@ Record future scope changes here. Update dependency links, phase counts, traceab
 | 2026-10-02 | FND-05 done: `IEmailSender` seam, MailKit SMTP adapter, Mailpit container in the AppHost, Development-only `POST /dev/email/test` | `Email:Provider=Https` resolves a sender that throws until DEP-04; the test endpoint is excluded from the OpenAPI contract |
 | 2026-10-03 | FND-06 done (first GitHub CI run green): GitHub Actions workflow, `scripts/verify.sh` entry point, gitleaks, Dependabot, local-only Playwright smoke test (ADR 0006) | P00 complete (6/6); JWT-04 later adds the browser CI job |
 | 2026-10-03 | JWT-01 done: Argon2id (Geralt/libsodium) behind `IPasswordHasher`, `password_credentials` table, `users.status`, 5–50 character policy (ADR 0007) | EF's migration lock does not serialize concurrent Migrators (found with a second migration): the FND-02 concurrency test and claim were withdrawn, P05 must guarantee a single run; minimum length 5 is a lab value |
+| 2026-10-03 | JWT-02 done: atomic registration (user + credential + personal account + owner membership), decoy 201 for duplicate emails, generic credential login service, dummy-hash verification, rehash on login, in-memory per-email login throttle (ADR 0008) | `POST /api/auth/login` stays 501 until JWT-03 (no token yet); the API now opens a database connection (`AddPersistence`); throttle is per process and per email only, JWT-05 owns the rest |

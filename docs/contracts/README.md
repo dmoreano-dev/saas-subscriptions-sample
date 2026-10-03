@@ -21,11 +21,11 @@ During local development the document is served at `/openapi/v1.json` and a brow
 
 ## Endpoints (FND-03)
 
-Every operation is contract-only until its phase and answers `501 not_implemented`.
+Every operation is contract-only until its phase and answers `501 not_implemented` (`Register` is implemented since JWT-02).
 
 | Operation | Route | Notes |
 |---|---|---|
-| `Register` | `POST /api/auth/register` | Creates user + personal account; no token. 400 only (no duplicate-email 409). |
+| `Register` | `POST /api/auth/register` | Creates user + personal account; no token. 400 only (no duplicate-email 409): an existing email gets the same 201 shape with ids that refer to nothing, so clients must not use them (ADR 0008). Implemented in JWT-02. |
 | `Login` | `POST /api/auth/login` | Returns a bearer access token; failures are the generic `invalid_credentials`. |
 | `GetMe` | `GET /api/me` | Caller's profile. |
 | `ListAccounts` | `GET /api/accounts` | Only accounts the caller is a member of. |

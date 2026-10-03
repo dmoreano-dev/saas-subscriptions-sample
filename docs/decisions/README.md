@@ -36,3 +36,4 @@ sessions don't re-litigate it. Keep each ADR short.
 | [0005](0005-typed-configuration-and-hosted-startup-validation.md) | Typed configuration and hosted startup validation | Accepted |
 | [0006](0006-ci-and-verification-foundation.md) | CI and verification foundation | Accepted |
 | [0007](0007-password-hashing-and-credential-storage.md) | Password hashing and credential storage | Accepted |
+| [0008](0008-registration-enumeration-and-login-throttling.md) | Registration without enumeration, generic login and in-memory login throttle | Accepted |
