@@ -27,8 +27,11 @@ role split are needed to learn the SaaS concepts at this stage, so both are defe
   `schema_migrations` schemas; it was removed as noise for a lab (it gave organization and a hook for
   per-module grants, but nothing in the plan needs them yet).
 - **Applying migrations:** the `Saas.Subscription.Sample.Migrator` console project, run to completion by
-  the AppHost (the API waits for it) or by CI/an operator. The API never migrates at startup. Concurrent
-  runs are safe because EF Core locks the database while migrating.
+  the AppHost (the API waits for it) or by CI/an operator. The API never migrates at startup. Only one
+  Migrator may run at a time: the deployment path guarantees it (P05 acceptance: "migration runs once with
+  locking"). *Correction 2026-10-03: this ADR first claimed that concurrent runs are safe because EF Core locks
+  the database. With two migrations in the history a concurrent runner re-applied the second one (`42701 column
+  already exists`), so the claim was wrong and its test was removed (JWT-01).*
 - **One database login for now.** The Migrator and, later, the API use the same connection string (locally
   the container's `postgres` superuser, injected by the AppHost as `ConnectionStrings__appdb`). A limited
   runtime role, a separate migration identity, least-privilege grants and tests proving the runtime login

@@ -12,6 +12,7 @@ public class ExampleConfigurationTests
     {
         { DatabaseOptions.SectionName, typeof(DatabaseOptions) },
         { AuthenticationOptions.SectionName, typeof(AuthenticationOptions) },
+        { PasswordHashingOptions.SectionName, typeof(PasswordHashingOptions) },
         { BillingOptions.SectionName, typeof(BillingOptions) },
         { EmailOptions.SectionName, typeof(EmailOptions) },
         { CacheOptions.SectionName, typeof(CacheOptions) },

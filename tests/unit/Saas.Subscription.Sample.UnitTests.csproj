@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\backend\Saas.Subscription.Sample.Domain\Saas.Subscription.Sample.Domain.csproj" />
     <ProjectReference Include="..\..\src\backend\Saas.Subscription.Sample.Application\Saas.Subscription.Sample.Application.csproj" />
+    <ProjectReference Include="..\..\src\backend\Saas.Subscription.Sample.Infrastructure\Saas.Subscription.Sample.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -29,6 +29,7 @@ All code, identifiers, comments, tests and technical documentation are in Englis
 | PostgreSQL | major **17** (assumed Supabase major; confirm when the Supabase project exists) | `WithImageTag("17")` in the AppHost, `postgres:17` in `tests/integration` |
 | EF Core / Npgsql | EF Core 10.0.12 (`dotnet-ef` tool), Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3, EFCore.NamingConventions 10.0.1 | `Directory.Packages.props`, `.config/dotnet-tools.json` |
 | Testcontainers | Testcontainers.PostgreSql / Testcontainers 4.15.0 | `Directory.Packages.props` |
+| Password hashing | Geralt 4.4.0 (Argon2id via libsodium 1.0.22) | `Directory.Packages.props` |
 | Email | MailKit 4.18.1 (SMTP adapter); Mailpit `axllent/mailpit:v1.31.3` (local capture) | `Directory.Packages.props`, `AppHost.cs`, `tests/integration/Email/MailpitFixture.cs` |
 
 NuGet package versions are managed centrally in `Directory.Packages.props`; do not put versions in `.csproj` files.

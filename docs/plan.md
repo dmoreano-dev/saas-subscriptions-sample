@@ -137,7 +137,7 @@ Use UUID identifiers, UTC timestamps, decimal monetary amounts with currency, ex
 
 | Module | Core tables and key information |
 |---|---|
-| Identity, first lesson | users; password_credentials with algorithm/version/parameters and encoded hash |
+| Identity, first lesson | users; password_credentials with algorithm and encoded hash (the format version, work-factor parameters and salt travel inside the encoded hash) |
 | Identity, later lessons | email_verification_tokens; password_reset_tokens; sessions; refresh_tokens; mfa_credentials; recovery_codes; external_identities |
 | Accounts | accounts with type/status; memberships; roles; permissions; role_permissions; membership_roles; invitations |
 | Catalog | plans; plan_versions; plan_prices; feature_definitions; plan_capabilities |

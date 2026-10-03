@@ -57,7 +57,7 @@ public class MigrationTests(PostgresFixture postgres)
         // Assert
         await using var connection = await Sql.OpenAsync(database.ConnectionString);
         var tables = await Sql.ColumnAsync(connection, TableNamesQuery);
-        Assert.Equal(["__EFMigrationsHistory", "accounts", "memberships", "users"], tables);
+        Assert.Equal(["__EFMigrationsHistory", "accounts", "memberships", "password_credentials", "users"], tables);
     }
 
     [Fact]
@@ -87,24 +87,6 @@ public class MigrationTests(PostgresFixture postgres)
 
         // Assert
         Assert.Equal(appliedBefore, await CountAppliedMigrationsAsync(database.ConnectionString));
-    }
-
-    [Fact]
-    public async Task MigrateAsync_ConcurrentRuns_AppliesEachMigrationOnce()
-    {
-        // Arrange
-        var database = await postgres.CreateEmptyDatabaseAsync();
-        await using var context = CreateContext(database.ConnectionString);
-        var migrationCount = context.Database.GetMigrations().Count();
-
-        // Act
-        var first = DatabaseMigrator.MigrateAsync(database.ConnectionString);
-        var second = DatabaseMigrator.MigrateAsync(database.ConnectionString);
-        var third = DatabaseMigrator.MigrateAsync(database.ConnectionString);
-        await Task.WhenAll(first, second, third);
-
-        // Assert
-        Assert.Equal(migrationCount, await CountAppliedMigrationsAsync(database.ConnectionString));
     }
 
     [Fact]

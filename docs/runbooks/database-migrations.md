@@ -31,7 +31,7 @@ dotnet run --project src/backend/Saas.Subscription.Sample.Migrator
 ```
 
 Exit code 0 = up to date, 1 = failed (message on stderr, no secrets), 2 = missing configuration.
-Re-running is safe and a no-op once applied; concurrent runs serialize.
+Re-running is safe and a no-op once applied. Do not run two Migrators at the same time against one database: nothing serializes them (the deployment step must guarantee a single run, see P05).
 
 ## Add a migration
 

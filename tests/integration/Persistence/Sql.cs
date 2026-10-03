@@ -52,6 +52,17 @@ internal static class Sql
             "INSERT INTO users (id, email, normalized_email, created_at, updated_at) VALUES (@id, @email, @normalized, now(), now())",
             ("id", id), ("email", email), ("normalized", normalizedEmail ?? email.Trim().ToLowerInvariant()));
 
+    public static Task InsertPasswordCredentialAsync(
+        NpgsqlConnection connection,
+        Guid userId,
+        string algorithm = "argon2id",
+        string encodedHash = "$argon2id$placeholder") =>
+        InsertAsync(
+            connection,
+            transaction: null,
+            "INSERT INTO password_credentials (user_id, algorithm, encoded_hash, created_at, updated_at) VALUES (@user, @algorithm, @hash, now(), now())",
+            ("user", userId), ("algorithm", algorithm), ("hash", encodedHash));
+
     public static Task InsertAccountAsync(NpgsqlConnection connection, Guid id, string type, Guid? personalOwnerUserId, string status = "Active", NpgsqlTransaction? transaction = null) =>
         InsertAsync(
             connection,

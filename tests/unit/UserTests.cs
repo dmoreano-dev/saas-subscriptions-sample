@@ -25,4 +25,14 @@ public class UserTests
         // Assert
         Assert.Equal("a@x.com", user.NormalizedEmail);
     }
+
+    [Fact]
+    public void Create_NewUser_IsActive()
+    {
+        // Act
+        var user = User.Create("a@x.com", FixedNow);
+
+        // Assert
+        Assert.Equal(UserStatus.Active, user.Status);
+    }
 }
