@@ -137,7 +137,7 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 
 ### FND-06 — Create the automated verification foundation
 
-**Status:** In progress (local verification done; first GitHub CI run pending) · **Priority:** P0 · **Phase:** P00 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P0 · **Phase:** P00 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** [FND-01](#fnd-01--create-the-english-repository-and-modular-skeleton), [FND-02](#fnd-02--establish-postgresql-migrations-and-account-foundations), [FND-03](#fnd-03--define-api-and-frontend-contracts)
 
@@ -145,8 +145,8 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 
 **Acceptance criteria:**
 
-- [ ] CI builds and runs relevant tests without live provider credentials; real PostgreSQL is available for relational tests.
-- [ ] A failing check fails CI; fixture isolation, secret exclusion, formatting, and dependency review are documented.
+- [x] CI builds and runs relevant tests without live provider credentials; real PostgreSQL is available for relational tests.
+- [x] A failing check fails CI; fixture isolation, secret exclusion, formatting, and dependency review are documented.
 
 **Verification:** Run the same verification commands locally and in CI.
 
@@ -156,4 +156,5 @@ Establish a reproducible foundation. Do not scaffold later authentication mechan
 - PostgreSQL in CI: Testcontainers on the runner's Docker (same fixture and code path as local, one database per test cloned from a migrated template; never skipped without Docker).
 - Local run, 2026-10-03: `scripts/verify.sh all` exit 0 — `dotnet format --verify-no-changes` clean, build 0 warnings, 64 unit + 155 integration tests passed (real PostgreSQL 17 and Mailpit), frontend `npm ci`/build/lint/`contract:check` OK, gitleaks 8.30.1 (11 commits) no leaks, NuGet and npm audits 0 vulnerabilities; `scripts/verify.sh browser`: 1 Playwright test passed. `actionlint` 1.7.12 reports no problems in the workflow.
 - Failure paths demonstrated locally: a badly formatted `.cs` file makes `scripts/verify.sh backend` exit 2; a scratch repo with fake tokens makes `gitleaks detect` exit 1 (findings redacted).
-- Limitations / **pending**: the workflow has not run on GitHub, so the first acceptance criterion (CI builds and runs the tests with real PostgreSQL) is **not yet proven**; item stays In progress until a green run of all four jobs is recorded here (compare the test totals with the local ones). Not verified at all: branch protection requiring the four checks, GitHub secret scanning/push protection, Dependabot (repository settings). The dependency audit's NuGet failure branch (it greps `dotnet list` output, which exits 0 with advisories) was not exercised against a real advisory. Browser tests are not in CI by decision (no flows yet; add the job with JWT-04). Actions are pinned to major tags, not SHAs.
+- GitHub CI, 2026-10-03: push of `66a713e` to `main` triggered [CI run 37112274598](https://github.com/dmoreano-dev/saas-subscriptions-sample/actions/runs/37112274598); `backend`, `frontend`, `secrets` and `dependencies` all concluded `success` (the `backend` job ran `dotnet test` with Testcontainers on the runner's Docker, so real PostgreSQL was available in CI). The per-test totals were not compared with the local 64 + 155 because job logs need authentication.
+- Limitations: not verified: branch protection requiring the four checks, GitHub secret scanning/push protection, Dependabot (repository settings). The dependency audit's NuGet failure branch (it greps `dotnet list` output, which exits 0 with advisories) was not exercised against a real advisory. Browser tests are not in CI by decision (no flows yet; add the job with JWT-04). Actions are pinned to major tags, not SHAs.
