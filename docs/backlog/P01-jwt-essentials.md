@@ -88,7 +88,7 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 
 ### JWT-04 — Build the React JWT-only login experience
 
-**Status:** Todo · **Priority:** P1 · **Phase:** P01 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P1 · **Phase:** P01 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** [JWT-03](#jwt-03--issue-and-validate-short-lived-bearer-jwts), [FND-03](P00-foundation.md#fnd-03--define-api-and-frontend-contracts)
 
@@ -96,12 +96,21 @@ Own users and short-lived access JWTs only. Validate tokens correctly from day o
 
 **Acceptance criteria:**
 
-- [ ] Authenticated API calls use the bearer header; reload or expiry returns the user to login with a clear state.
-- [ ] No access-token persistence in localStorage and no refresh-cookie flow; logout behavior explicitly documents copied-token validity until expiry.
+- [x] Authenticated API calls use the bearer header; reload or expiry returns the user to login with a clear state.
+- [x] No access-token persistence in localStorage and no refresh-cookie flow; logout behavior explicitly documents copied-token validity until expiry.
 
 **Verification:** Browser registration/login/logout/reload/expiry scenarios.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-03. Commit: `git log --grep JWT-04`.
+
+- Verification: `scripts/verify.sh frontend` (build, lint, contract check) and `scripts/verify.sh browser` → 11 Playwright tests passed against the real API and PostgreSQL 17 (Docker). Browser tests stay **local only**; whether they join CI is decided after the frontend work (owner decision).
+- Token: `AuthProvider` keeps `{ accessToken, expiresAt, user }` in React state only. No localStorage, sessionStorage, cookies or IndexedDB; `fetch` uses `credentials: 'omit'`. A reload loses the session and lands on `/login` (the login page states the token is memory-only).
+- API client: `src/api/client.ts` returns `ok | problem` using the generated types through `contract.ts`; it adds `Authorization: Bearer` and branches on `code`. 401 `unauthenticated` with a session ends it with the "expired" notice; 401 `invalid_credentials` is a generic form error; 429 reads `Retry-After` and disables the button for that countdown; 400/`registration_failed` give a generic validation message (ProblemDetails has no per-field errors); 503/network give a retryable message.
+- Expiry: a client timer closes the session at `expiresAt` and the server 401 stays the authority (clock drift, 30 s skew).
+- Screens (`react-router-dom`): `/register` (201 has no token, goes to `/login` with a notice), `/login`, protected `/me` (calls `GET /api/me`), local logout. `/me` and the docs state that a copied token stays valid until `exp` (~10 min) and there is no revocation until P06.
+- Browser scenarios (`tests/browser/tests/auth.spec.ts`): register, login + profile, wrong password, `/me` without session, no token in storage/cookies, logout, copied token still `200` after logout, reload, expiry (`page.clock`), server-rejected token. `support/global-setup.ts` starts `postgres:17`, runs the Migrator and the API with a throwaway ES256 key generated in memory (nothing committed); `vite preview` proxies `/api` to it.
+- Limitations: not in CI; needs Docker and the .NET SDK. Inherited issue: `npm run contract:generate` still fails without full API configuration because OpenAPI generation boots the host and startup option validation rejects it (reproduced; the contract did not change in this item, so it was not fixed). Follow-up: supply throwaway configuration to that invocation.
+
 
 ### JWT-05 — Add baseline authentication abuse controls
 

@@ -4,7 +4,7 @@
 #   scripts/verify.sh frontend      npm ci, build, lint, OpenAPI contract check
 #   scripts/verify.sh secrets       gitleaks scan of the working tree and the full git history
 #   scripts/verify.sh dependencies  known-vulnerability audit of NuGet and npm packages
-#   scripts/verify.sh browser       Playwright smoke tests (local only, not part of CI yet; needs Chromium)
+#   scripts/verify.sh browser       Playwright scenarios (local only, not part of CI yet; needs Chromium)
 #   scripts/verify.sh all           backend + frontend + secrets + dependencies (what CI runs)
 set -euo pipefail
 
@@ -60,7 +60,7 @@ browser() {
   step "browser: install dependencies"
   npm ci --prefix tests/browser
   npx --prefix tests/browser playwright install chromium
-  step "browser: Playwright smoke tests"
+  step "browser: Playwright scenarios"
   npm test --prefix tests/browser
 }
 

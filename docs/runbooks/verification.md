@@ -10,7 +10,7 @@ green local run means the same commands pass in CI. Rationale: [ADR 0006](../dec
 | `scripts/verify.sh frontend` | `npm ci`, `npm run build` (`tsc -b` + Vite), `npm run lint` (oxlint), `npm run contract:check` | Node 24.16.0 |
 | `scripts/verify.sh secrets` | `gitleaks detect` over the working tree **and the full git history** | `brew install gitleaks` |
 | `scripts/verify.sh dependencies` | NuGet vulnerability report (direct + transitive) and `npm audit --audit-level=high` | network |
-| `scripts/verify.sh browser` | Playwright smoke test against `vite preview` | Chromium (installed by the script); **local only, not in CI** |
+| `scripts/verify.sh browser` | Playwright scenarios (login, logout, reload, expiry) against the real API + PostgreSQL | Chromium (installed by the script), Docker, .NET SDK; **local only, not in CI** |
 | `scripts/verify.sh all` | backend + frontend + secrets + dependencies (what CI runs) | all of the above |
 
 Each subcommand stops at the first failing step and exits non-zero; CI turns that into a red check. Provider
@@ -69,13 +69,11 @@ To make them gate merges, require the four checks in the repository's branch pro
 
 ## Browser tests (local only)
 
-`tests/browser` is a minimal Playwright project (Chromium only) with one smoke test that builds the frontend, serves
-it with `vite preview` and checks that the shell renders. Run it with `scripts/verify.sh browser` or, from
-`tests/browser`, `npm ci && npm run install:browsers && npm test`.
-
-It is intentionally **not** a CI job yet: there are no user flows to protect. Add the job when the first flow that
-needs the API arrives (login in JWT-04; checkout return, account switching and cookie/CSRF behaviour later) and
-extend the project then. The config already honours `CI=true` (no server reuse, `forbidOnly`).
+`tests/browser` is a Playwright project (Chromium only). `support/global-setup.ts` starts `postgres:17` in Docker, runs
+the Migrator and the API with a throwaway ES256 signing key generated in memory, and `vite preview` serves the
+production build with `/api` proxied to that API; everything is stopped afterwards. It needs Docker and the .NET SDK.
+Run it with `scripts/verify.sh browser` or, from `tests/browser`, `npm ci && npm run install:browsers && npm test`.
+It is deliberately not part of CI yet; that decision is revisited after the frontend items.
 
 ## What cannot be proven locally, and how it is validated
 

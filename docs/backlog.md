@@ -31,7 +31,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | Phase | Items | Required | Done | Link |
 |---|---:|---:|---:|---|
 | P00 — Foundation | 6 | 6 | 6 | [Open](backlog/P00-foundation.md) |
-| P01 — JWT essentials | 6 | 6 | 3 | [Open](backlog/P01-jwt-essentials.md) |
+| P01 — JWT essentials | 6 | 6 | 4 | [Open](backlog/P01-jwt-essentials.md) |
 | P02 — Personal accounts and plans | 8 | 8 | 0 | [Open](backlog/P02-personal-accounts-and-plans.md) |
 | P03 — Billing integration | 8 | 8 | 0 | [Open](backlog/P03-billing-integration.md) |
 | P04 — Subscription lifecycle | 8 | 8 | 0 | [Open](backlog/P04-subscription-lifecycle.md) |
@@ -45,7 +45,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | P12 — Full lab verification | 6 | 6 | 0 | [Open](backlog/P12-full-lab-verification.md) |
 | Optional — Conditional and future extensions | 4 | 0 | 0 | [Open](backlog/optional-extensions.md) |
 
-**Current focus:** [JWT-04](backlog/P01-jwt-essentials.md#jwt-04--build-the-react-jwt-only-login-experience) — next item, not started (JWT-03 is done, pending owner review). Update this line to the active item at the start/end of each session.
+**Current focus:** [JWT-05](backlog/P01-jwt-essentials.md#jwt-05--add-baseline-authentication-abuse-controls) — next item, not started (JWT-04 is done, pending owner review). Update this line to the active item at the start/end of each session.
 
 ## Definition of Done
 
