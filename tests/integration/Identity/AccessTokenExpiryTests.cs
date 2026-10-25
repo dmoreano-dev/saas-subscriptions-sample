@@ -11,9 +11,9 @@ public sealed class AccessTokenExpiryTests
     private const int ClockSkewSeconds = 30;
 
     [Theory]
-    [InlineData(0, HttpStatusCode.NotImplemented)]
-    [InlineData(LifetimeSeconds, HttpStatusCode.NotImplemented)]
-    [InlineData(LifetimeSeconds + ClockSkewSeconds, HttpStatusCode.NotImplemented)]
+    [InlineData(0, HttpStatusCode.OK)]
+    [InlineData(LifetimeSeconds, HttpStatusCode.OK)]
+    [InlineData(LifetimeSeconds + ClockSkewSeconds, HttpStatusCode.OK)]
     [InlineData(LifetimeSeconds + ClockSkewSeconds + 1, HttpStatusCode.Unauthorized)]
     public async Task Get_ProtectedRouteSomeTimeAfterIssue_AcceptsTheTokenOnlyUntilExpiryPlusClockSkew(
         int secondsAfterIssue,

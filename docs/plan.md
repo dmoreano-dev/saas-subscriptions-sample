@@ -139,7 +139,7 @@ Use UUID identifiers, UTC timestamps, decimal monetary amounts with currency, ex
 |---|---|
 | Identity, first lesson | users; password_credentials with algorithm and encoded hash (the format version, work-factor parameters and salt travel inside the encoded hash) |
 | Identity, later lessons | email_verification_tokens; password_reset_tokens; sessions; refresh_tokens; mfa_credentials; recovery_codes; external_identities |
-| Accounts | accounts with type/status; memberships; roles; permissions; role_permissions; membership_roles; invitations |
+| Accounts | accounts with type/status; memberships with status; roles and permissions with scope (Account or Platform); role_permissions; membership_roles; platform_role_assignments; invitations |
 | Catalog | plans; plan_versions; plan_prices; feature_definitions; plan_capabilities |
 | Subscription state | subscriptions; subscription_changes with effective_at; effective access projection/version; billing_customers |
 | Enterprise | enterprise_contracts and revisions; contract_capabilities; seat_assignments; identity_connections; provisioning_connections; external_group_mappings |
@@ -211,7 +211,7 @@ Evaluate account-scoped access as: valid authentication, active account/membersh
 
 Examples of permissions: projects.read, projects.write, reports.generate, members.manage, billing.manage, security.manage, and audit.read. Examples of capabilities: reports.basic, reports.advanced, projects.max_count, reports.monthly_limit, and seats.max_count. Capability absence denies the capability. Numeric limits have explicit semantics; unlimited must be represented intentionally rather than using an arbitrary large number.
 
-Personal owners receive appropriate account permissions automatically. For organizations, use Owner, Admin, BillingAdmin, and Member roles with an explicit permission matrix. BillingAdmin manages billing but does not automatically read project content. Admin cannot transfer ownership or assign platform privileges. Prevent removal of the final active owner; ownership transfer is a protected, audited transaction.
+Personal owners receive appropriate account permissions automatically, through the `personal_owner` role written at registration ([ADR 0011](decisions/0011-account-permissions-and-verified-account-scope.md)). For organizations, use Owner, Admin, BillingAdmin, and Member roles with an explicit permission matrix. BillingAdmin manages billing but does not automatically read project content. Admin cannot transfer ownership or assign platform privileges. Prevent removal of the final active owner; ownership transfer is a protected, audited transaction.
 
 Initial entitlement resolution reads PostgreSQL. The later cache layer uses IDistributedCache and AddDistributedMemoryCache in local and single-instance hosted environments. Cache keys include environment, schema/version namespace, and account ID. Resolve a snapshot with calculated_at, access_version, effective_from, and valid_until. Catalog versioning and account access versioning are different concepts.
 
@@ -351,7 +351,7 @@ Endpoint families (the DTOs and error codes are specified in [`contracts/`](cont
 | Operator | /api/operator/contracts, /billing-events, /reconciliation; explicit platform permission |
 | Infrastructure | /health/live; /health/ready; protected or development-only API documentation |
 
-Use ProblemDetails with stable English machine codes. Distinguish unauthenticated 401, denied capability/permission 403, hidden foreign resource 404, business/concurrency conflict 409, throttling 429, and transient dependency failure 503. Do not use HTTP 429 for a contractual monthly quota merely because it is a limit; use a documented quota-exceeded business response (409 with code `quota_exceeded`; a capability the plan does not include is 403 `capability_not_granted`). Registration never reveals whether an email already exists. Preserve a correlation ID without exposing exception internals.
+Use ProblemDetails with stable English machine codes. Distinguish unauthenticated 401, denied capability/permission 403 (`account_suspended` when a member acts in a suspended account), hidden foreign resource 404, business/concurrency conflict 409, throttling 429, and transient dependency failure 503. Do not use HTTP 429 for a contractual monthly quota merely because it is a limit; use a documented quota-exceeded business response (409 with code `quota_exceeded`; a capability the plan does not include is 403 `capability_not_granted`). Registration never reveals whether an email already exists. Preserve a correlation ID without exposing exception internals.
 
 Client retries of mutations use idempotency keys where needed. Generate the TypeScript API client or equivalent contract checks from OpenAPI. Never include provider secrets, password hashes, raw reset/refresh tokens, or internal operator-only fields in general DTOs.
 

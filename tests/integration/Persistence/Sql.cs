@@ -70,12 +70,51 @@ internal static class Sql
             "INSERT INTO accounts (id, type, status, name, personal_owner_user_id, created_at, updated_at) VALUES (@id, @type, @status, 'Test', @owner, now(), now())",
             ("id", id), ("type", type), ("status", status), ("owner", personalOwnerUserId));
 
-    public static Task InsertMembershipAsync(NpgsqlConnection connection, Guid accountId, Guid userId, NpgsqlTransaction? transaction = null) =>
-        InsertAsync(
+    public static async Task<Guid> InsertMembershipAsync(NpgsqlConnection connection, Guid accountId, Guid userId, NpgsqlTransaction? transaction = null)
+    {
+        var id = NewId();
+        await InsertAsync(
             connection,
             transaction,
             "INSERT INTO memberships (id, account_id, user_id, created_at, updated_at) VALUES (@id, @account, @user, now(), now())",
-            ("id", NewId()), ("account", accountId), ("user", userId));
+            ("id", id), ("account", accountId), ("user", userId));
+        return id;
+    }
+
+    public static Task InsertRoleAsync(NpgsqlConnection connection, string key, string scope) =>
+        InsertAsync(connection, transaction: null, "INSERT INTO roles (key, scope, name) VALUES (@key, @scope, @key)", ("key", key), ("scope", scope));
+
+    public static Task InsertRolePermissionAsync(NpgsqlConnection connection, string roleKey, string permissionKey, string scope) =>
+        InsertAsync(
+            connection,
+            transaction: null,
+            "INSERT INTO role_permissions (role_key, permission_key, scope) VALUES (@role, @permission, @scope)",
+            ("role", roleKey), ("permission", permissionKey), ("scope", scope));
+
+    public static Task InsertMembershipRoleAsync(NpgsqlConnection connection, Guid membershipId, string roleKey, string roleScope = "Account") =>
+        InsertAsync(
+            connection,
+            transaction: null,
+            "INSERT INTO membership_roles (membership_id, role_key, role_scope, created_at) VALUES (@membership, @role, @scope, now())",
+            ("membership", membershipId), ("role", roleKey), ("scope", roleScope));
+
+    public static Task InsertPlatformRoleAssignmentAsync(NpgsqlConnection connection, Guid userId, string roleKey, string roleScope = "Platform") =>
+        InsertAsync(
+            connection,
+            transaction: null,
+            "INSERT INTO platform_role_assignments (user_id, role_key, role_scope, created_at) VALUES (@user, @role, @scope, now())",
+            ("user", userId), ("role", roleKey), ("scope", roleScope));
+
+    public static async Task<Guid> InsertProjectAsync(NpgsqlConnection connection, Guid accountId, string name)
+    {
+        var id = NewId();
+        await InsertAsync(
+            connection,
+            transaction: null,
+            "INSERT INTO projects (id, account_id, name, created_at, updated_at) VALUES (@id, @account, @name, now(), now())",
+            ("id", id), ("account", accountId), ("name", name));
+        return id;
+    }
 
     public static Task<int> DeleteUserAsync(NpgsqlConnection connection, Guid id) =>
         ExecuteAsync(connection, "DELETE FROM users WHERE id = @id", ("id", id));

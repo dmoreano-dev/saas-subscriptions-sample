@@ -3,22 +3,25 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Saas.Subscription.Sample.Api.Authorization;
 using Saas.Subscription.Sample.Api.Problems;
 using Saas.Subscription.Sample.Application.Identity;
+using Saas.Subscription.Sample.Domain.Authorization;
 using Saas.Subscription.Sample.IntegrationTests.Problems;
 
 namespace Saas.Subscription.Sample.IntegrationTests.Identity;
 
 /// <summary>
-/// The JWT checkpoint (P01): every route under <c>/api</c> except register and login refuses a request without a
-/// valid token, and a valid token only reaches handlers that exist at this stage. Accounts and projects are still
-/// contract-only, so a valid token meets 501 there, never data.
+/// Every route under <c>/api</c> except register and login refuses a request without a valid token (P01), and a
+/// valid token alone opens no account (ENT-02): each route that selects an account declares the access it demands
+/// and answers 404 to a caller who is not a member. The host has no database; the caller exists and has no accounts.
 /// </summary>
 public sealed class ProtectedSurfaceTests(FixedClockApiFixture api) : IClassFixture<FixedClockApiFixture>
 {
     private const string ApiPrefix = "/api";
     private const string PublicPrefix = "/api/auth/";
-    private const string JsonBody = "{}";
+    private const string JsonBody = """{"name":"p","description":null}""";
+    private const string AccountIdSegment = "{accountId";
     private const string JsonContentType = "application/json";
     private const string AnyId = "00000000-0000-7000-8000-000000000001";
     private static readonly Regex RouteParameter = new(@"\{[^}]+\}", RegexOptions.Compiled);
@@ -35,15 +38,14 @@ public sealed class ProtectedSurfaceTests(FixedClockApiFixture api) : IClassFixt
         { "DELETE", "/api/accounts/{accountId:guid}/projects/{projectId:guid}" },
     };
 
-    /// <summary>The same routes minus <c>/api/me</c>, which reads the user from PostgreSQL (see <c>MeEndpointTests</c>).</summary>
-    public static readonly TheoryData<string, string> StageContractOnlyRoutes = new()
+    /// <summary>Every route that selects an account, with the permission it must demand (null: active membership only).</summary>
+    public static readonly TheoryData<string, string, string?> AccountScopedRoutes = new()
     {
-        { "GET", "/api/accounts" },
-        { "GET", "/api/accounts/{accountId:guid}/capabilities" },
-        { "GET", "/api/accounts/{accountId:guid}/projects" },
-        { "POST", "/api/accounts/{accountId:guid}/projects" },
-        { "GET", "/api/accounts/{accountId:guid}/projects/{projectId:guid}" },
-        { "DELETE", "/api/accounts/{accountId:guid}/projects/{projectId:guid}" },
+        { "GET", "/api/accounts/{accountId:guid}/capabilities", null },
+        { "GET", "/api/accounts/{accountId:guid}/projects", Permissions.ProjectsRead },
+        { "POST", "/api/accounts/{accountId:guid}/projects", Permissions.ProjectsWrite },
+        { "GET", "/api/accounts/{accountId:guid}/projects/{projectId:guid}", Permissions.ProjectsRead },
+        { "DELETE", "/api/accounts/{accountId:guid}/projects/{projectId:guid}", Permissions.ProjectsWrite },
     };
 
     [Fact]
@@ -94,9 +96,40 @@ public sealed class ProtectedSurfaceTests(FixedClockApiFixture api) : IClassFixt
         Assert.Equal(ProblemCodes.Unauthenticated, problem.Code);
     }
 
+    [Fact]
+    public void RoutesWithAnAccountId_AreExactlyTheOnesWithADeclaredAccessRequirement()
+    {
+        // Arrange
+        var expected = AccountScopedRoutes.Select(row => $"{row[0]} {row[1]}").Order().ToArray();
+
+        // Act
+        var actual = ApiEndpoints()
+            .Where(entry => entry.Template.Contains(AccountIdSegment, StringComparison.OrdinalIgnoreCase))
+            .Select(entry => $"{entry.Method} {entry.Template}")
+            .Order()
+            .ToArray();
+
+        // Assert
+        Assert.Equal(expected, actual);
+    }
+
     [Theory]
-    [MemberData(nameof(StageContractOnlyRoutes))]
-    public async Task Send_ContractOnlyRouteWithValidToken_ReachesOnlyTheNotImplementedHandler(string method, string template)
+    [MemberData(nameof(AccountScopedRoutes))]
+    public void AccountScopedRoute_Metadata_DemandsVerifiedAccessWithItsPermission(string method, string template, string? permission)
+    {
+        // Arrange
+        var endpoint = ApiEndpoints().Single(entry => entry.Method == method && entry.Template == template);
+
+        // Act
+        var requirement = endpoint.AccessRequirement;
+
+        // Assert
+        Assert.Equal(new AccountAccessRequirement(permission), requirement);
+    }
+
+    [Theory]
+    [MemberData(nameof(AccountScopedRoutes))]
+    public async Task Send_AccountScopedRouteWithValidTokenOfANonMember_ReturnsNotFoundProblem(string method, string template, string? _)
     {
         // Arrange
         using var client = api.Factory.CreateClient();
@@ -109,8 +142,8 @@ public sealed class ProtectedSurfaceTests(FixedClockApiFixture api) : IClassFixt
         var problem = await ProblemResponse.ReadAsync(response);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
-        Assert.Equal(ProblemCodes.NotImplemented, problem.Code);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(ProblemCodes.NotFound, problem.Code);
     }
 
     private static HttpRequestMessage Build(string method, string template)
@@ -135,7 +168,8 @@ public sealed class ProtectedSurfaceTests(FixedClockApiFixture api) : IClassFixt
                 .Select(method => new ApiEndpoint(
                     method,
                     endpoint.RoutePattern.RawText!.TrimEnd('/'),
-                    endpoint.Metadata.GetMetadata<IAuthorizeData>() is not null)));
+                    endpoint.Metadata.GetMetadata<IAuthorizeData>() is not null,
+                    endpoint.Metadata.GetMetadata<AccountAccessRequirement>())));
 
-    private sealed record ApiEndpoint(string Method, string Template, bool RequiresAuthorization);
+    private sealed record ApiEndpoint(string Method, string Template, bool RequiresAuthorization, AccountAccessRequirement? AccessRequirement);
 }

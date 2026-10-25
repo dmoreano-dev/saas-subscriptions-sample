@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Saas.Subscription.Sample.Application.Identity;
 using Saas.Subscription.Sample.Domain.Accounts;
+using Saas.Subscription.Sample.Domain.Authorization;
 using Saas.Subscription.Sample.Domain.Identity;
 using Saas.Subscription.Sample.Infrastructure.Persistence;
 
@@ -26,11 +27,13 @@ public sealed class RegistrationService(AppDbContext db, IPasswordHasher hasher,
         db.Users.Add(user);
         db.PasswordCredentials.Add(PasswordCredential.Create(user.Id, hash, now));
         db.Accounts.Add(account);
-        db.Memberships.Add(Membership.Create(account.Id, user.Id, now));
+        var membership = Membership.Create(account.Id, user.Id, now);
+        db.Memberships.Add(membership);
+        db.MembershipRoles.Add(MembershipRole.Create(membership.Id, SystemRoles.PersonalOwner, now));
 
         try
         {
-            // One SaveChanges is one transaction: either all four rows exist or none does. There is no
+            // One SaveChanges is one transaction: either all five rows exist or none does. There is no
             // existence check first (it would race); the unique index on the normalized email decides.
             await db.SaveChangesAsync(cancellationToken);
             return new RegistrationResult(ToResult(user, account), Created: true);

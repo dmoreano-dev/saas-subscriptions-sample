@@ -21,6 +21,7 @@ public static class ProblemCodes
     // 403
     public const string Forbidden = "forbidden";
     public const string CapabilityNotGranted = "capability_not_granted";
+    public const string AccountSuspended = "account_suspended";
 
     // 404
     public const string NotFound = "not_found";

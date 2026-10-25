@@ -96,6 +96,14 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Active")
+                        .HasColumnName("status");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -120,7 +128,246 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ux_memberships_account_id_user_id");
 
-                    b.ToTable("memberships", (string)null);
+                    b.ToTable("memberships", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_memberships_status", "status IN ('Active', 'Suspended')");
+                        });
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Authorization.MembershipRole", b =>
+                {
+                    b.Property<Guid>("MembershipId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("membership_id");
+
+                    b.Property<string>("RoleKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("role_key");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("RoleScope")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("role_scope");
+
+                    b.HasKey("MembershipId", "RoleKey")
+                        .HasName("pk_membership_roles");
+
+                    b.HasIndex("RoleKey", "RoleScope")
+                        .HasDatabaseName("ix_membership_roles_role_key_role_scope");
+
+                    b.ToTable("membership_roles", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_membership_roles_role_scope", "role_scope = 'Account'");
+                        });
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Authorization.PermissionDefinition", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("key");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("scope");
+
+                    b.HasKey("Key")
+                        .HasName("pk_permissions");
+
+                    b.HasAlternateKey("Key", "Scope")
+                        .HasName("ak_permissions_key_scope");
+
+                    b.ToTable("permissions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_permissions_scope", "scope IN ('Account', 'Platform')");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Key = "projects.read",
+                            Description = "Read the account's projects",
+                            Scope = "Account"
+                        },
+                        new
+                        {
+                            Key = "projects.write",
+                            Description = "Create, change and delete the account's projects",
+                            Scope = "Account"
+                        },
+                        new
+                        {
+                            Key = "reports.generate",
+                            Description = "Generate and download the account's reports",
+                            Scope = "Account"
+                        },
+                        new
+                        {
+                            Key = "billing.manage",
+                            Description = "Manage the account's subscription and billing",
+                            Scope = "Account"
+                        },
+                        new
+                        {
+                            Key = "platform.operate",
+                            Description = "Use the platform operator tools",
+                            Scope = "Platform"
+                        });
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Authorization.PlatformRoleAssignment", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("RoleKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("role_key");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("RoleScope")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("role_scope");
+
+                    b.HasKey("UserId", "RoleKey")
+                        .HasName("pk_platform_role_assignments");
+
+                    b.HasIndex("RoleKey", "RoleScope")
+                        .HasDatabaseName("ix_platform_role_assignments_role_key_role_scope");
+
+                    b.ToTable("platform_role_assignments", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_platform_role_assignments_role_scope", "role_scope = 'Platform'");
+                        });
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Authorization.Role", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("key");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("scope");
+
+                    b.HasKey("Key")
+                        .HasName("pk_roles");
+
+                    b.HasAlternateKey("Key", "Scope")
+                        .HasName("ak_roles_key_scope");
+
+                    b.ToTable("roles", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_roles_scope", "scope IN ('Account', 'Platform')");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Key = "personal_owner",
+                            Name = "Personal account owner",
+                            Scope = "Account"
+                        },
+                        new
+                        {
+                            Key = "platform_operator",
+                            Name = "Platform operator",
+                            Scope = "Platform"
+                        });
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Authorization.RoleGrant", b =>
+                {
+                    b.Property<string>("RoleKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("role_key");
+
+                    b.Property<string>("PermissionKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("permission_key");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("scope");
+
+                    b.HasKey("RoleKey", "PermissionKey")
+                        .HasName("pk_role_permissions");
+
+                    b.HasIndex("PermissionKey", "Scope")
+                        .HasDatabaseName("ix_role_permissions_permission_key_scope");
+
+                    b.HasIndex("RoleKey", "Scope")
+                        .HasDatabaseName("ix_role_permissions_role_key_scope");
+
+                    b.ToTable("role_permissions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            RoleKey = "personal_owner",
+                            PermissionKey = "projects.read",
+                            Scope = "Account"
+                        },
+                        new
+                        {
+                            RoleKey = "personal_owner",
+                            PermissionKey = "projects.write",
+                            Scope = "Account"
+                        },
+                        new
+                        {
+                            RoleKey = "personal_owner",
+                            PermissionKey = "reports.generate",
+                            Scope = "Account"
+                        },
+                        new
+                        {
+                            RoleKey = "personal_owner",
+                            PermissionKey = "billing.manage",
+                            Scope = "Account"
+                        },
+                        new
+                        {
+                            RoleKey = "platform_operator",
+                            PermissionKey = "platform.operate",
+                            Scope = "Platform"
+                        });
                 });
 
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.FeatureDefinition", b =>
@@ -436,6 +683,50 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Projects.Project", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_projects");
+
+                    b.HasAlternateKey("AccountId", "Id")
+                        .HasName("ak_projects_account_id_id");
+
+                    b.ToTable("projects", (string)null);
+                });
+
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Accounts.Account", b =>
                 {
                     b.HasOne("Saas.Subscription.Sample.Domain.Identity.User", null)
@@ -460,6 +751,61 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_memberships_users_user_id");
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Authorization.MembershipRole", b =>
+                {
+                    b.HasOne("Saas.Subscription.Sample.Domain.Accounts.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_membership_roles_memberships_membership_id");
+
+                    b.HasOne("Saas.Subscription.Sample.Domain.Authorization.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RoleKey", "RoleScope")
+                        .HasPrincipalKey("Key", "Scope")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_membership_roles_roles_role_key_role_scope");
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Authorization.PlatformRoleAssignment", b =>
+                {
+                    b.HasOne("Saas.Subscription.Sample.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_platform_role_assignments_users_user_id");
+
+                    b.HasOne("Saas.Subscription.Sample.Domain.Authorization.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RoleKey", "RoleScope")
+                        .HasPrincipalKey("Key", "Scope")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_platform_role_assignments_roles_role_key_role_scope");
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Authorization.RoleGrant", b =>
+                {
+                    b.HasOne("Saas.Subscription.Sample.Domain.Authorization.PermissionDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("PermissionKey", "Scope")
+                        .HasPrincipalKey("Key", "Scope")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_role_permissions_permissions_permission_key_scope");
+
+                    b.HasOne("Saas.Subscription.Sample.Domain.Authorization.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RoleKey", "Scope")
+                        .HasPrincipalKey("Key", "Scope")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_role_permissions_roles_role_key_scope");
                 });
 
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanCapability", b =>
@@ -507,6 +853,16 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_password_credentials_users_user_id");
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Projects.Project", b =>
+                {
+                    b.HasOne("Saas.Subscription.Sample.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_projects_accounts_account_id");
                 });
 
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanVersion", b =>

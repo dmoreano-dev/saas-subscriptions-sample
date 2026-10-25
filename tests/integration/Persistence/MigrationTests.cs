@@ -58,7 +58,7 @@ public class MigrationTests(PostgresFixture postgres)
         // Assert
         await using var connection = await Sql.OpenAsync(database.ConnectionString);
         var tables = await Sql.ColumnAsync(connection, TableNamesQuery);
-        Assert.Equal(["__EFMigrationsHistory", "accounts", "feature_definitions", "memberships", "password_credentials", "plan_capabilities", "plan_prices", "plan_versions", "plans", "users"], tables);
+        Assert.Equal(["__EFMigrationsHistory", "accounts", "feature_definitions", "membership_roles", "memberships", "password_credentials", "permissions", "plan_capabilities", "plan_prices", "plan_versions", "plans", "platform_role_assignments", "projects", "role_permissions", "roles", "users"], tables);
     }
 
     [Fact]

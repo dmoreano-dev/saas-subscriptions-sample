@@ -59,6 +59,24 @@ public class RegistrationServiceTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task RegisterAsync_NewEmail_GivesTheOwnerMembershipThePersonalOwnerRole()
+    {
+        // Arrange
+        var harness = await IdentityHarness.CreateAsync(postgres);
+
+        // Act
+        var result = await harness.RegisterAsync();
+
+        // Assert
+        await using var connection = await Sql.OpenAsync(harness.ConnectionString);
+        var roles = await Sql.ColumnAsync(
+            connection,
+            "SELECT r.role_key || ':' || m.status FROM membership_roles r JOIN memberships m ON m.id = r.membership_id " +
+            $"WHERE m.account_id = '{result.User.PersonalAccountId}' AND m.user_id = '{result.User.UserId}'");
+        Assert.Equal(["personal_owner:Active"], roles);
+    }
+
+    [Fact]
     public async Task RegisterAsync_NewEmail_StoresAHashAndNeverThePassword()
     {
         // Arrange

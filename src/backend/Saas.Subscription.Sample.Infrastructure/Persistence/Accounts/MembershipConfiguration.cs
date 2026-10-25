@@ -9,10 +9,12 @@ internal sealed class MembershipConfiguration : IEntityTypeConfiguration<Members
 {
     public void Configure(EntityTypeBuilder<Membership> builder)
     {
-        builder.ToTable("memberships");
+        builder.ToTable("memberships", table =>
+            table.HasCheckConstraint("ck_memberships_status", "status IN ('Active', 'Suspended')"));
 
         builder.HasKey(membership => membership.Id);
         builder.Property(membership => membership.Id).ValueGeneratedNever();
+        builder.Property(membership => membership.Status).HasConversion<string>().HasMaxLength(32).HasDefaultValue(MembershipStatus.Active).IsRequired();
         builder.Property(membership => membership.CreatedAt).IsRequired();
         builder.Property(membership => membership.UpdatedAt).IsRequired();
 

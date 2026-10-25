@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Saas.Subscription.Sample.Domain.Accounts;
+using Saas.Subscription.Sample.Domain.Authorization;
 using Saas.Subscription.Sample.Domain.Catalog;
 using Saas.Subscription.Sample.Domain.Identity;
+using Saas.Subscription.Sample.Domain.Projects;
 
 namespace Saas.Subscription.Sample.Infrastructure.Persistence;
 
@@ -14,6 +16,18 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Account> Accounts => Set<Account>();
 
     public DbSet<Membership> Memberships => Set<Membership>();
+
+    public DbSet<PermissionDefinition> Permissions => Set<PermissionDefinition>();
+
+    public DbSet<Role> Roles => Set<Role>();
+
+    public DbSet<RoleGrant> RolePermissions => Set<RoleGrant>();
+
+    public DbSet<MembershipRole> MembershipRoles => Set<MembershipRole>();
+
+    public DbSet<PlatformRoleAssignment> PlatformRoleAssignments => Set<PlatformRoleAssignment>();
+
+    public DbSet<Project> Projects => Set<Project>();
 
     public DbSet<FeatureDefinition> FeatureDefinitions => Set<FeatureDefinition>();
 

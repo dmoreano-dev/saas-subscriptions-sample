@@ -2,9 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using Saas.Subscription.Sample.Application.Authorization;
 using Saas.Subscription.Sample.Application.Catalog;
 using Saas.Subscription.Sample.Application.Configuration;
+using Saas.Subscription.Sample.Application.Projects;
+using Saas.Subscription.Sample.Infrastructure.Persistence.Authorization;
 using Saas.Subscription.Sample.Infrastructure.Persistence.Catalog;
+using Saas.Subscription.Sample.Infrastructure.Persistence.Projects;
 
 namespace Saas.Subscription.Sample.Infrastructure.Persistence;
 
@@ -30,6 +34,9 @@ public static class PersistenceServiceCollectionExtensions
         });
 
         services.AddScoped<ICatalogReader, CatalogReader>();
+        services.AddScoped<IAccountAccessReader, AccountAccessReader>();
+        services.AddScoped<IAccountAccessService, AccountAccessService>();
+        services.AddScoped<IProjectStore, ProjectStore>();
 
         return services;
     }

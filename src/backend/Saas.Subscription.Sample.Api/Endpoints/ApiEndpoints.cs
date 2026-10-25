@@ -1,9 +1,9 @@
 namespace Saas.Subscription.Sample.Api.Endpoints;
 
 /// <summary>
-/// Maps the endpoint families. A family that is still contract-only answers 501 until the phase that owns it
-/// replaces the handlers (accounts/capabilities P02, projects P02). Routes, DTOs and documented responses are the
-/// contract and must not change when that happens.
+/// Maps the endpoint families. An operation that is still contract-only answers 501 until the item that owns it
+/// replaces the handler (capabilities ENT-03, project creation ENT-04). Account-scoped routes are authorized first,
+/// so even a 501 is only reachable by a member of the account.
 /// </summary>
 public static class ApiEndpoints
 {

@@ -21,16 +21,17 @@ During local development the document is served at `/openapi/v1.json` and a brow
 
 ## Endpoints (FND-03)
 
-Every operation is contract-only until its phase and answers `501 not_implemented` (`Register` is implemented since JWT-02).
+An operation is contract-only until its item and answers `501 not_implemented`. Still contract-only:
+`GetAccountCapabilities` (ENT-03) and `CreateProject` (ENT-04); both are authorized first, so only a member reaches the 501.
 
 | Operation | Route | Notes |
 |---|---|---|
 | `Register` | `POST /api/auth/register` | Creates user + personal account; no token. 400 only (no duplicate-email 409): an existing email gets the same 201 shape with ids that refer to nothing, so clients must not use them (ADR 0008). Implemented in JWT-02. |
 | `Login` | `POST /api/auth/login` | Returns a bearer access token; failures are the generic `invalid_credentials`. |
 | `GetMe` | `GET /api/me` | Caller's profile. |
-| `ListAccounts` | `GET /api/accounts` | Only accounts the caller is a member of. |
+| `ListAccounts` | `GET /api/accounts` | Only accounts the caller is an active member of; closed accounts are not listed. |
 | `GetAccountCapabilities` | `GET /api/accounts/{accountId}/capabilities` | Effective capabilities; unlimited is explicit (`isUnlimited`). |
-| `ListProjects` / `CreateProject` / `GetProject` / `DeleteProject` | `/api/accounts/{accountId}/projects[/{projectId}]` | `accountId` is a selector, not proof of membership. |
+| `ListProjects` / `CreateProject` / `GetProject` / `DeleteProject` | `/api/accounts/{accountId}/projects[/{projectId}]` | `accountId` is a selector, not proof of membership. Reading needs `projects.read`, deleting `projects.write`. |
 
 ## Conventions
 
@@ -38,7 +39,8 @@ Every operation is contract-only until its phase and answers `501 not_implemente
 - Every property is required in the schema; optional values are explicitly nullable.
 - Responses never contain password hashes, tokens other than the issued access token, provider secrets,
   internal versions or data of accounts the caller cannot access (guarded by `ContractGuardTests`).
-- A foreign or unknown account/resource is `404`, never `403` (no existence leak).
+- A foreign or unknown account/resource is `404`, never `403` (no existence leak). `403` is only for a member:
+  `forbidden` when their role lacks the permission, `account_suspended` when the account is suspended.
 
 ## Errors
 
@@ -51,7 +53,7 @@ server logs, otherwise one is generated. Quote it when reporting a problem.
 |---|---|---|
 | 400 | `bad_request`, `validation_failed` (with `errors`), `registration_failed` | Malformed or invalid input |
 | 401 | `unauthenticated`, `invalid_credentials` | Missing/invalid credentials |
-| 403 | `forbidden`, `capability_not_granted` | Caller known, action or capability denied |
+| 403 | `forbidden`, `capability_not_granted`, `account_suspended` | Caller is a member; permission or capability denied, or the account is suspended |
 | 404 | `not_found` | Missing or hidden resource |
 | 409 | `conflict`, `quota_exceeded` | Business/concurrency conflict; contractual quota used up |
 | 429 | `rate_limited` (+ `Retry-After`) | Throttling (not implemented yet) |

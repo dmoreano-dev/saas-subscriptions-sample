@@ -29,7 +29,7 @@ Deliver the complete personal-account model first, using PostgreSQL-backed autho
 
 ### ENT-02 — Implement account-scoped permissions and resource isolation
 
-**Status:** Todo · **Priority:** P0 · **Phase:** P02 · **Suggested model:** Opus / high
+**Status:** Done · **Priority:** P0 · **Phase:** P02 · **Suggested model:** Opus / high
 
 **Dependencies:** [JWT-06](P01-jwt-essentials.md#jwt-06--verify-and-explain-the-jwt-checkpoint), [FND-02](P00-foundation.md#fnd-02--establish-postgresql-migrations-and-account-foundations)
 
@@ -37,12 +37,22 @@ Deliver the complete personal-account model first, using PostgreSQL-backed autho
 
 **Acceptance criteria:**
 
-- [ ] Personal owners receive scoped permissions; platform operator privileges are distinct; Pro/Max are never roles.
-- [ ] Reads, writes, raw SQL paths, relationships, and future job contexts reject unverified account IDs and cross-account resource references.
+- [x] Personal owners receive scoped permissions; platform operator privileges are distinct; Pro/Max are never roles.
+- [x] Reads, writes, raw SQL paths, relationships, and future job contexts reject unverified account IDs and cross-account resource references.
 
 **Verification:** Two-user/two-account BOLA and cross-account write/FK tests.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-03. Commit: `git log --grep ENT-02`. Decision: [ADR 0011](../decisions/0011-account-permissions-and-verified-account-scope.md).
+
+- Verification: `scripts/verify.sh all` → exit 0; `dotnet test` → 201/201 unit and 372/372 integration passed (real PostgreSQL 17 through Testcontainers); `contract:check` and the committed-contract test pass.
+- Schema (migration `AddPermissionsAndProjects`): `permissions`, `roles`, `role_permissions`, `membership_roles`, `platform_role_assignments`, `memberships.status`, minimal `projects` with the alternate key `(account_id, id)`. Seeded as migration data: role `personal_owner` (Account: `projects.read`, `projects.write`, `reports.generate`, `billing.manage`) and `platform_operator` (Platform: `platform.operate`). Existing owners are backfilled.
+- Behavior: `IAccountAccessService` decides from PostgreSQL on every request; `AccountScope` (not constructible outside the Application assembly) is the only way into `IProjectStore`. Implemented `GET /api/accounts`, `GET`/`DELETE` of projects (delete is raw SQL with the scope in the predicate). `GET capabilities` and `POST projects` are authorized first and then still answer 501 (ENT-03/ENT-04).
+- Two-user/two-account tests over HTTP (`tests/integration/Authorization`): Ana with her own valid token gets 404 for Bob's project list, project (through his account and through hers), delete (both ways, row stays), create, capabilities, and for an unknown account; her own list returns only her project and `GET /api/accounts` only her account. State read per request with the same token: suspended membership 404, suspended account 403 `account_suspended`, closed account 404, disabled user 401, roles removed 403, role restored 200, read-only role reads but cannot delete. A correctly signed token claiming `plan=max`, roles, permissions and Bob's `account_id` grants nothing (404 on Bob's project, 403 on a write the role lacks), with a control proving that token is accepted. A platform operator without membership gets 404.
+- Database tests (`PermissionSchemaTests`): a child row pointing at another account's project and moving a referenced project to another account are rejected (23503); a platform role on a membership, an account role as a platform assignment and a permission of the other scope on a role are rejected (23503/23514); the seeded roles are exactly the two system roles and no plan key is a role or permission; an owner created before the migration receives `personal_owner`.
+- Guard: `ProtectedSurfaceTests` reads the endpoint table: the routes with `{accountId}` are exactly the listed ones and each declares its expected permission.
+- Mutation checks (run and reverted): removing `account_id` from the project predicates failed 3 isolation tests; ignoring membership status and the specific permission in the policy failed 5 unit and 3 integration tests.
+- Contract: one new problem code `account_suspended` and a documented 403 on `GetAccountCapabilities`; `openapi.json` and `schema.d.ts` regenerated.
+- Limitations: the cross-account foreign key is proven with a table created inside the test, because no real table references `projects` until reports (ENT-06); no organization roles or permission matrix (P08) and no operator endpoint uses `platform.operate` yet (P09), so "platform privileges are distinct" is proven as schema separation plus no account access; the two authorization queries are not one transaction; the filter runs after body binding (a malformed body is 400 before 404); a suspended account also blocks capabilities and, later, billing until P03/P04 add an exception; the database does not force an owner to hold `personal_owner`; no browser or frontend change (the React app does not call these routes yet); `contract:generate` needed Development placeholders for the connection string and signing key (see README); the `Down` migration was not exercised; the token-validation tests now replace the access reader with a caller who has no accounts, since no protected route is database-free any more.
 
 ### ENT-03 — Resolve current subscription entitlements from PostgreSQL
 

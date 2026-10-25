@@ -1,7 +1,5 @@
 using System.Net;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
-using Saas.Subscription.Sample.Application.Identity;
 using Saas.Subscription.Sample.IntegrationTests.Configuration;
 using Saas.Subscription.Sample.Api.Problems;
 using Saas.Subscription.Sample.IntegrationTests.Problems;
@@ -9,9 +7,9 @@ using Saas.Subscription.Sample.IntegrationTests.Problems;
 namespace Saas.Subscription.Sample.IntegrationTests.Contracts;
 
 /// <summary>
-/// The real API through <see cref="ApiFactory"/> (no database). The account and project families are still
-/// contract-only: behind the bearer token they answer 501 with a problem body. Registration, login and
-/// <c>/api/me</c> are implemented and covered against a real database in <c>Identity/</c>.
+/// The real API through <see cref="ApiFactory"/> (no database), so only what is decided before any handler runs.
+/// Registration, login and <c>/api/me</c> are covered against a real database in <c>Identity/</c>; the account and
+/// project routes, including the ones that still answer 501 to a member, in <c>Authorization/</c>.
 /// </summary>
 public class ContractEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
@@ -30,32 +28,6 @@ public class ContractEndpointTests(ApiFactory factory) : IClassFixture<ApiFactor
         }
 
         return request;
-    }
-
-    private string IssueToken() => factory.Services.GetRequiredService<IAccessTokenIssuer>().Issue(Guid.CreateVersion7()).Value;
-
-    [Theory]
-    [InlineData("GET", "/api/accounts", null)]
-    [InlineData("GET", $"/api/accounts/{AccountId}/capabilities", null)]
-    [InlineData("GET", $"/api/accounts/{AccountId}/projects", null)]
-    [InlineData("POST", $"/api/accounts/{AccountId}/projects", ProjectJson)]
-    [InlineData("GET", $"/api/accounts/{AccountId}/projects/{ProjectId}", null)]
-    [InlineData("DELETE", $"/api/accounts/{AccountId}/projects/{ProjectId}", null)]
-    public async Task Send_ContractOnlyEndpointWithAccessToken_ReturnsNotImplementedProblem(string method, string path, string? json)
-    {
-        // Arrange
-        using var client = factory.CreateClient();
-        using var request = CreateRequest(method, path, json);
-        request.Headers.Authorization = new(BearerScheme, IssueToken());
-
-        // Act
-        using var response = await client.SendAsync(request);
-        var problem = await ProblemResponse.ReadAsync(response);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
-        Assert.Equal(ProblemCodes.NotImplemented, problem.Code);
-        Assert.False(string.IsNullOrWhiteSpace(problem.CorrelationId));
     }
 
     [Theory]

@@ -83,7 +83,9 @@ needed); they fail with an explicit message, and are never skipped, when Docker 
 ## API contract
 
 The OpenAPI document `docs/contracts/openapi.json` and the frontend types `src/frontend/src/api/schema.d.ts`
-are generated and committed. After changing an endpoint or DTO run `cd src/frontend && npm run contract:generate`;
+are generated and committed. After changing an endpoint or DTO run `cd src/frontend && npm run contract:generate`
+(it starts the API, so it needs `ASPNETCORE_ENVIRONMENT=Development`, a placeholder `ConnectionStrings__appdb` and any
+throwaway `Authentication__SigningKey` / `Authentication__SigningKeyId` in the environment; nothing is connected to);
 `npm run contract:check` and the `Contracts` integration tests fail when they drift. Conventions, endpoint list
 and the error-code catalog: [`docs/contracts/README.md`](docs/contracts/README.md). In Development the API
 serves `/openapi/v1.json` and a Scalar UI at `/scalar` (404 in every other environment).

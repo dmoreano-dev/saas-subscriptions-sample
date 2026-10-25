@@ -180,7 +180,7 @@ export interface components {
              * @description Stable machine-readable error code.
              * @enum {string}
              */
-            code: "bad_request" | "capability_not_granted" | "conflict" | "forbidden" | "internal_error" | "invalid_credentials" | "not_found" | "not_implemented" | "quota_exceeded" | "rate_limited" | "registration_failed" | "service_unavailable" | "unauthenticated" | "validation_failed";
+            code: "account_suspended" | "bad_request" | "capability_not_granted" | "conflict" | "forbidden" | "internal_error" | "invalid_credentials" | "not_found" | "not_implemented" | "quota_exceeded" | "rate_limited" | "registration_failed" | "service_unavailable" | "unauthenticated" | "validation_failed";
             /** @description Identifies the request in the server logs; quote it when reporting a problem. */
             correlationId: string;
             traceId?: string;
@@ -207,7 +207,7 @@ export interface components {
              * @description Stable machine-readable error code.
              * @enum {string}
              */
-            code: "bad_request" | "capability_not_granted" | "conflict" | "forbidden" | "internal_error" | "invalid_credentials" | "not_found" | "not_implemented" | "quota_exceeded" | "rate_limited" | "registration_failed" | "service_unavailable" | "unauthenticated" | "validation_failed";
+            code: "account_suspended" | "bad_request" | "capability_not_granted" | "conflict" | "forbidden" | "internal_error" | "invalid_credentials" | "not_found" | "not_implemented" | "quota_exceeded" | "rate_limited" | "registration_failed" | "service_unavailable" | "unauthenticated" | "validation_failed";
             /** @description Identifies the request in the server logs; quote it when reporting a problem. */
             correlationId: string;
             traceId?: string;
@@ -458,6 +458,15 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

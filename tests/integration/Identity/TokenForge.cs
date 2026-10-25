@@ -148,6 +148,28 @@ internal static class TokenForge
         return $"{signingInput}.{Base64Url.EncodeToString(signature)}";
     }
 
+    /// <summary>
+    /// A token the API accepts (right key, issuer, audience and lifetime) for a real user, carrying extra claims
+    /// the API never issues. It stands for a stale or self-serving copy of a role, plan or account label.
+    /// </summary>
+    public static string CreateWithExtraClaims(AuthenticationOptions options, DateTimeOffset now, Guid subject, IReadOnlyDictionary<string, object> extraClaims)
+    {
+        var header = new Dictionary<string, object> { ["alg"] = Es256, ["typ"] = "JWT", ["kid"] = TestSigningKey.KeyId };
+        var payload = new Dictionary<string, object>(extraClaims)
+        {
+            ["iss"] = options.Issuer!,
+            ["aud"] = options.Audience!,
+            ["sub"] = subject.ToString(),
+            ["jti"] = Guid.NewGuid().ToString("N"),
+            ["iat"] = now.ToUnixTimeSeconds(),
+            ["nbf"] = now.ToUnixTimeSeconds(),
+            ["exp"] = (now + Lifetime).ToUnixTimeSeconds(),
+        };
+
+        var signingInput = $"{Encode(header)}.{Encode(payload)}";
+        return $"{signingInput}.{Base64Url.EncodeToString(TestSigningKey.Key.SignData(Ascii(signingInput), HashAlgorithmName.SHA256))}";
+    }
+
     private static void SetLifetime(Dictionary<string, object> payload, DateTimeOffset notBefore, DateTimeOffset expires)
     {
         payload["iat"] = notBefore.ToUnixTimeSeconds();

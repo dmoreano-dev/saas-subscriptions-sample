@@ -12,6 +12,8 @@ public sealed class Membership
 
     public Guid UserId { get; private set; }
 
+    public MembershipStatus Status { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -21,6 +23,7 @@ public sealed class Membership
         Id = Guid.CreateVersion7(now),
         AccountId = accountId,
         UserId = userId,
+        Status = MembershipStatus.Active,
         CreatedAt = now,
         UpdatedAt = now,
     };
