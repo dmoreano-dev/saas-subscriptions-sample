@@ -62,7 +62,7 @@ internal sealed class PlanVersionConfiguration : IEntityTypeConfiguration<PlanVe
         builder.Property(version => version.Status).HasConversion<string>().HasMaxLength(16).IsRequired();
         builder.Property(version => version.CreatedAt).IsRequired();
 
-        builder.HasOne<Plan>()
+        builder.HasOne(version => version.Plan)
             .WithMany()
             .HasForeignKey(version => version.PlanId)
             .OnDelete(DeleteBehavior.Restrict);
@@ -102,7 +102,7 @@ internal sealed class PlanCapabilityConfiguration : IEntityTypeConfiguration<Pla
         builder.Property(capability => capability.FeatureKey).HasMaxLength(100);
         builder.Property(capability => capability.IsUnlimited).IsRequired();
 
-        builder.HasOne<FeatureDefinition>()
+        builder.HasOne(capability => capability.Definition)
             .WithMany()
             .HasForeignKey(capability => capability.FeatureKey)
             .OnDelete(DeleteBehavior.Restrict);

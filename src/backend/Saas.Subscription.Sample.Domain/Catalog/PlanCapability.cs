@@ -14,6 +14,9 @@ public sealed class PlanCapability
 
     public string FeatureKey { get; private set; } = null!;
 
+    /// <summary>How the capability is typed (flag or limit); loaded only when a query includes it.</summary>
+    public FeatureDefinition Definition { get; private set; } = null!;
+
     public bool? BoolValue { get; private set; }
 
     public int? LimitValue { get; private set; }

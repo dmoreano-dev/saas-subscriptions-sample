@@ -964,7 +964,7 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanCapability", b =>
                 {
-                    b.HasOne("Saas.Subscription.Sample.Domain.Catalog.FeatureDefinition", null)
+                    b.HasOne("Saas.Subscription.Sample.Domain.Catalog.FeatureDefinition", "Definition")
                         .WithMany()
                         .HasForeignKey("FeatureKey")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -977,6 +977,8 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_plan_capabilities_plan_versions_plan_version_id");
+
+                    b.Navigation("Definition");
                 });
 
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanPrice", b =>
@@ -991,12 +993,14 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanVersion", b =>
                 {
-                    b.HasOne("Saas.Subscription.Sample.Domain.Catalog.Plan", null)
+                    b.HasOne("Saas.Subscription.Sample.Domain.Catalog.Plan", "Plan")
                         .WithMany()
                         .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_plan_versions_plans_plan_id");
+
+                    b.Navigation("Plan");
                 });
 
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Identity.PasswordCredential", b =>

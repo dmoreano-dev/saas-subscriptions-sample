@@ -5,10 +5,12 @@ using Npgsql;
 using Saas.Subscription.Sample.Application.Authorization;
 using Saas.Subscription.Sample.Application.Catalog;
 using Saas.Subscription.Sample.Application.Configuration;
+using Saas.Subscription.Sample.Application.Entitlements;
 using Saas.Subscription.Sample.Application.Projects;
 using Saas.Subscription.Sample.Infrastructure.Persistence.Authorization;
 using Saas.Subscription.Sample.Infrastructure.Persistence.Catalog;
 using Saas.Subscription.Sample.Infrastructure.Persistence.Projects;
+using Saas.Subscription.Sample.Infrastructure.Persistence.Subscriptions;
 
 namespace Saas.Subscription.Sample.Infrastructure.Persistence;
 
@@ -37,6 +39,8 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IAccountAccessReader, AccountAccessReader>();
         services.AddScoped<IAccountAccessService, AccountAccessService>();
         services.AddScoped<IProjectStore, ProjectStore>();
+        services.AddScoped<IEntitlementReader, EntitlementReader>();
+        services.AddScoped<IEntitlementService, EntitlementService>();
 
         return services;
     }

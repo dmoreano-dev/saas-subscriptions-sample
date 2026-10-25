@@ -17,6 +17,9 @@ public sealed class PlanVersion
 
     public Guid PlanId { get; private set; }
 
+    /// <summary>The plan this version belongs to; loaded only when a query includes it.</summary>
+    public Plan Plan { get; private set; } = null!;
+
     public int Version { get; private set; }
 
     public PlanVersionStatus Status { get; private set; }
