@@ -40,3 +40,4 @@ sessions don't re-litigate it. Keep each ADR short.
 | [0009](0009-access-token-signing-and-validation.md) | Access tokens: ES256 signing key, claims and validation rules | Accepted |
 | [0010](0010-plan-catalog-immutability-and-seed.md) | Plan catalog: trigger-enforced immutability and Migrator seed | Accepted |
 | [0011](0011-account-permissions-and-verified-account-scope.md) | Account permissions in role tables and a verified account scope | Accepted |
+| [0012](0012-subscription-projection-and-entitlement-resolution.md) | Local subscription projection and entitlement resolution | Accepted |

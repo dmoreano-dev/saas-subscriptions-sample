@@ -141,17 +141,14 @@ public class AccountIsolationTests(PostgresFixture postgres)
         Assert.Equal(world.Ana.AccountId, Assert.Single(items).GetProperty("id").GetGuid());
     }
 
-    [Theory]
-    [InlineData("GET", "capabilities")]
-    [InlineData("POST", "projects")]
-    public async Task Send_ContractOnlyRouteOfOwnAccount_ReachesTheNotImplementedHandler(string method, string segment)
+    [Fact]
+    public async Task Post_ProjectOfOwnAccount_ReachesTheNotImplementedHandler()
     {
         // Arrange
         await using var world = await TwoAccounts.CreateAsync(postgres);
-        var route = $"{TwoAccounts.AccountsRoute}/{world.Ana.AccountId}/{segment}";
 
         // Act
-        using var response = await world.SendAsync(new HttpMethod(method), route, world.Ana.Token);
+        using var response = await world.SendAsync(HttpMethod.Post, TwoAccounts.ProjectsRoute(world.Ana.AccountId), world.Ana.Token);
         var problem = await ProblemResponse.ReadAsync(response);
 
         // Assert

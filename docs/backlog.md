@@ -32,7 +32,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 |---|---:|---:|---:|---|
 | P00 — Foundation | 6 | 6 | 6 | [Open](backlog/P00-foundation.md) |
 | P01 — JWT essentials | 6 | 6 | 6 | [Open](backlog/P01-jwt-essentials.md) |
-| P02 — Personal accounts and plans | 8 | 8 | 2 | [Open](backlog/P02-personal-accounts-and-plans.md) |
+| P02 — Personal accounts and plans | 8 | 8 | 3 | [Open](backlog/P02-personal-accounts-and-plans.md) |
 | P03 — Billing integration | 8 | 8 | 0 | [Open](backlog/P03-billing-integration.md) |
 | P04 — Subscription lifecycle | 8 | 8 | 0 | [Open](backlog/P04-subscription-lifecycle.md) |
 | P05 — Memory cache and first hosted demo | 11 | 11 | 0 | [Open](backlog/P05-memory-cache-and-hosted-demo.md) |
@@ -45,7 +45,7 @@ Commercial seed values, effective-date rules, access guarantees, retention, role
 | P12 — Full lab verification | 6 | 6 | 0 | [Open](backlog/P12-full-lab-verification.md) |
 | Optional — Conditional and future extensions | 4 | 0 | 0 | [Open](backlog/optional-extensions.md) |
 
-**Current focus:** [ENT-03](backlog/P02-personal-accounts-and-plans.md#ent-03--resolve-current-subscription-entitlements-from-postgresql) — next item, not started (ENT-02 done). Update this line to the active item at the start/end of each session.
+**Current focus:** [ENT-04](backlog/P02-personal-accounts-and-plans.md#ent-04--implement-scoped-project-operations) — next item, not started (ENT-03 done). Update this line to the active item at the start/end of each session.
 
 ## Definition of Done
 
@@ -96,3 +96,4 @@ Record future scope changes here. Update dependency links, phase counts, traceab
 | 2026-10-03 | JWT-06 done (P01 complete, 6/6): `ProtectedSurfaceTests` (every `/api` route but register/login needs a token; a valid token only reaches 501 handlers on contract-only routes), JWT checkpoint runbook with the concept split and demo checklist | Demo checklist not walked by hand (Playwright covers the same steps); copied token valid until `exp` is documented, revocation is P06 |
 | 2026-10-03 | ENT-01 done: versioned plan/price catalog (`plans`, `plan_versions`, `plan_capabilities`, `plan_prices`, `feature_definitions`), PostgreSQL triggers for published-version immutability, idempotent seed in the Migrator (ADR 0010) | `GET /api/plans` deferred; annual prices not seeded; immutability is by "published" because no subscriptions exist yet |
 | 2026-10-03 | ENT-02 done: role/permission tables with separate platform scope, `memberships.status`, central `IAccountAccessService` + `AccountScope`, minimal `projects` table with list/get/delete (ADR 0011) | New problem code `account_suspended` (403); `GET /api/accounts` and project read/delete are implemented, capabilities and project creation stay 501 behind authorization |
+| 2026-10-25 | ENT-03 done: local subscription projection (`subscriptions`, `subscription_changes`), trigger allowing only published plan versions, reader (facts) + pure `EntitlementPolicy` (facts + time → answer), `GET /api/accounts/{id}/capabilities` implemented (ADR 0012) | Schema created in ENT-03 instead of P03 because the resolver needs something to read; access version deferred to P05 CAC-01 and organization accounts to P08/P09 (owner: build only what the item needs); transitive security pins and a vite bump landed just before (separate `chore(deps)` commit) |

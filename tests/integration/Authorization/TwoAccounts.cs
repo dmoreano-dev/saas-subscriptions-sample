@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using Saas.Subscription.Sample.Application.Configuration;
+using Saas.Subscription.Sample.Infrastructure.Persistence;
 using Saas.Subscription.Sample.IntegrationTests.Identity;
 using Saas.Subscription.Sample.IntegrationTests.Persistence;
 
@@ -12,9 +13,9 @@ namespace Saas.Subscription.Sample.IntegrationTests.Authorization;
 internal sealed record Caller(string Token, Guid UserId, Guid AccountId);
 
 /// <summary>
-/// The real API over a real, migrated PostgreSQL database with two users, Ana and Bob, each registered through the
-/// API (so each owns one personal account) and each with one project. Ana is the caller under test; everything of
-/// Bob's is foreign to her.
+/// The real API over a real, migrated PostgreSQL database with the plan catalog seeded and two users, Ana and Bob,
+/// each registered through the API (so each owns one personal account, on Free) and each with one project. Ana is
+/// the caller under test; everything of Bob's is foreign to her.
 /// </summary>
 internal sealed class TwoAccounts : IAsyncDisposable
 {
@@ -51,6 +52,7 @@ internal sealed class TwoAccounts : IAsyncDisposable
     public static async Task<TwoAccounts> CreateAsync(PostgresFixture postgres)
     {
         var database = await postgres.CreateMigratedDatabaseAsync();
+        await DatabaseMigrator.SeedCatalogAsync(database.ConnectionString);
         var factory = new PostgresApiFactory(database.ConnectionString);
         var world = new TwoAccounts(factory, factory.CreateClient(), database.ConnectionString);
 

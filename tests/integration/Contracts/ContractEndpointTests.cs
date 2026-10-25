@@ -9,7 +9,7 @@ namespace Saas.Subscription.Sample.IntegrationTests.Contracts;
 /// <summary>
 /// The real API through <see cref="ApiFactory"/> (no database), so only what is decided before any handler runs.
 /// Registration, login and <c>/api/me</c> are covered against a real database in <c>Identity/</c>; the account and
-/// project routes, including the ones that still answer 501 to a member, in <c>Authorization/</c>.
+/// project routes, including project creation that still answers 501 to a member, in <c>Authorization/</c>.
 /// </summary>
 public class ContractEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {

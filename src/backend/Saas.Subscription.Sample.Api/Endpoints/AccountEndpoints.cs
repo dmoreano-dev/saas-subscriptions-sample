@@ -4,6 +4,9 @@ using Saas.Subscription.Sample.Api.Authorization;
 using Saas.Subscription.Sample.Api.Contracts.Accounts;
 using Saas.Subscription.Sample.Api.Problems;
 using Saas.Subscription.Sample.Application.Authorization;
+using Saas.Subscription.Sample.Application.Catalog;
+using Saas.Subscription.Sample.Application.Entitlements;
+using Saas.Subscription.Sample.Domain.Catalog;
 
 namespace Saas.Subscription.Sample.Api.Endpoints;
 
@@ -21,7 +24,7 @@ public static class AccountEndpoints
             .Produces<AccountListResponse>();
 
         // accountId is only a selector. Membership is verified server-side; a missing or foreign account is 404.
-        accounts.MapGet("/{accountId:guid}/capabilities", (Guid accountId) => ApiProblems.NotImplemented())
+        accounts.MapGet("/{accountId:guid}/capabilities", GetCapabilitiesAsync)
             .RequireAccountAccess()
             .WithName("GetAccountCapabilities")
             .WithSummary("Effective capabilities of the account now. Guides the UI; the API re-authorizes every action.")
@@ -46,4 +49,28 @@ public static class AccountEndpoints
             : Results.Ok(new AccountListResponse([.. accounts.Select(account =>
                 new AccountSummary(account.Id, account.Name, (AccountType)account.Type, (AccountStatus)account.Status))]));
     }
+
+    private static async Task<IResult> GetCapabilitiesAsync(
+        Guid accountId,
+        HttpContext httpContext,
+        IEntitlementService entitlements,
+        CancellationToken cancellationToken)
+    {
+        var snapshot = await entitlements.GetAsync(httpContext.GetAccountScope(), cancellationToken);
+
+        return Results.Ok(new CapabilitiesResponse(
+            snapshot.AccountId,
+            snapshot.CalculatedAt,
+            new PlanVersionRefDto(snapshot.Plan.PlanKey, snapshot.Plan.Version),
+            snapshot.ValidUntil,
+            [.. snapshot.Plan.Capabilities.Select(ToDto)]));
+    }
+
+    private static CapabilityDto ToDto(CapabilityEntry capability) => capability.ValueType == FeatureValueType.Boolean
+        ? new CapabilityDto(capability.Key, CapabilityKind.Feature, EntitlementSnapshot.IsGranted(capability), Limit: null)
+        : new CapabilityDto(
+            capability.Key,
+            CapabilityKind.Limit,
+            EntitlementSnapshot.IsGranted(capability),
+            new CapabilityLimitDto(capability.IsUnlimited, capability.LimitValue));
 }

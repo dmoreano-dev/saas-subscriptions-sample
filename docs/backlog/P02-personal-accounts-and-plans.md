@@ -56,7 +56,7 @@ Deliver the complete personal-account model first, using PostgreSQL-backed autho
 
 ### ENT-03 — Resolve current subscription entitlements from PostgreSQL
 
-**Status:** Todo · **Priority:** P0 · **Phase:** P02 · **Suggested model:** Sonnet 5.5
+**Status:** Done · **Priority:** P0 · **Phase:** P02 · **Suggested model:** Sonnet 5.5
 
 **Dependencies:** [ENT-01](#ent-01--create-the-versioned-plan-and-price-catalog), [ENT-02](#ent-02--implement-account-scoped-permissions-and-resource-isolation), [FND-04](P00-foundation.md#fnd-04--add-typed-configuration-provider-seams-and-controllable-time)
 
@@ -64,12 +64,23 @@ Deliver the complete personal-account model first, using PostgreSQL-backed autho
 
 **Acceptance criteria:**
 
-- [ ] Resolve Free defaults or a subscription's effective version, access deadlines, pending changes, and restrictions without calling Stripe.
-- [ ] A stale plan label in a JWT cannot override current state; unknown capabilities deny access; response includes version and validity metadata.
+- [x] Resolve Free defaults or a subscription's effective version, access deadlines, pending changes, and restrictions without calling Stripe.
+- [x] A stale plan label in a JWT cannot override current state; unknown capabilities deny access; response includes version and validity metadata.
 
 **Verification:** Capability matrix, missing-capability, and effective-boundary tests.
 
-**Evidence:** Pending.
+**Evidence:** 2026-10-25. Commit: `git log --grep ENT-03`. Decision: [ADR 0012](../decisions/0012-subscription-projection-and-entitlement-resolution.md).
+
+- Verification: `scripts/verify.sh all` → exit 0; `dotnet test` → 233/233 unit and 406/406 integration passed (real PostgreSQL 17 through Testcontainers); `contract:check` and the committed-contract test pass.
+- Schema (migration `AddSubscriptionProjection`): `subscriptions` (purchased `plan_version_id`, `status` `Active`/`PastDue`/`Ended`, paid period, `access_until`, `ended_at`) and `subscription_changes` (`PlanChange`/`Cancel`, target version, `effective_at`, `Pending`/`Applied`/`Cancelled`). Partial unique indexes: one non-ended subscription per account, one pending change per subscription; composite FK `(account_id, subscription_id)`; CHECKs for status/ended_at, kind/target, pending/resolved_at, period and deadline order; a trigger rejects references to unpublished plan versions (55000), closing the ENT-01 "referenced = published" limitation. No provider ids.
+- Behavior: `IEntitlementReader` reads the latest Free version, the current subscription, its pending change and each referenced plan version with its capabilities (one small query each, with a `Select` projection through the new `PlanVersion.Plan` / `PlanCapability.Definition` navigations; 3 queries for a Free account, up to 6). The pure `EntitlementPolicy` resolves them with `TimeProvider` time into an `EntitlementSnapshot`: Free default; paid plan in `[current_period_start, access_until)`; after the deadline Free with `restricted` + `paymentOverdue`/`accessExpired`; a change whose instant passed governs access without a worker; `valid_until` = next known transition. No published Free version → exception (fail closed). `IEntitlementService` takes an `AccountScope`. `GET /api/accounts/{id}/capabilities` is implemented and returns only `plan` {key, version}, `calculatedAt`, `validUntil` and the declared capabilities (state, restriction and pending change stay internal until LIF-02/LIF-04 screens need them).
+- Capability matrix and boundaries (unit, `tests/unit/Entitlements`): Free/ended/active/past-due/restricted, each boundary at −1 s / exactly / +1 s (deadline, grace end, downgrade instant, cancellation instant), validity ends at the earliest transition, a subscription before its start is Free until the start; absence denies: undeclared and never-defined keys are not granted, limit 0 is not granted, unlimited is.
+- PostgreSQL (`tests/integration/Entitlements`, `SubscriptionSchemaTests`): the latest published Free is used (a newer Free version wins); a subscriber keeps the purchased version after a newer one is published; ended subscriptions and applied/cancelled changes are ignored; persisted grace and an unapplied downgrade switch exactly at their instants; a database without a published Free version throws; every constraint above rejects bad rows with the expected SQLSTATE.
+- HTTP over real PostgreSQL: Free defaults with plan version and no boundary; only declared capabilities, with kind, granted and explicit limit; a correctly signed token claiming `plan=max` and extra capabilities still gets Free; active Pro is valid until its deadline; past-due after grace gets Free; a downgrade scheduled before the deadline cuts `validUntil` at the downgrade; Bob's Max does not change Ana's answer; every token was issued before the rows were written.
+- Mutation checks (run and reverted): `>` instead of `>=` at the deadline failed 4 unit + 1 integration tests; ignoring an effective pending change failed 6 + 1; granting a zero limit failed 1 unit; reading ended subscriptions failed 1 integration; reading non-pending changes failed 2 integration; picking the oldest Free version failed 1 integration.
+- Contract: `CapabilitiesResponse` gains `plan` {key, version}; `openapi.json` and `schema.d.ts` regenerated. Guard tests updated: the expected table list, and the "no provider columns" query allows only `subscription_changes.subscription_id`.
+- Scope trimmed on review: an account access version (for the P05 cache), an organization "no free tier" state and extra response fields (state, restriction, effective-from, pending change) were built and then removed because no ENT-03 criterion needs them; they belong to CAC-01, P08/P09 and LIF-02/LIF-04.
+- Limitations: no writer for subscription rows exists yet (P03/P04), so all states are inserted by tests; no cache (P05 CAC-01) and therefore no 30-second bound; every account, including an organization account, falls back to Free (organization accounts cannot be created through the API yet); the plan/account-type match is not enforced by the database; `access_until` equal to period end means paid access stops at period end until a renewal is confirmed (writers may add leeway); the enforcement points that consume `IsGranted` (project cap, reports) are ENT-04/ENT-06; no frontend change (ENT-07); the `Down` migration was not exercised; suspended accounts still get 403 on capabilities (ADR 0011).
 
 ### ENT-04 — Implement scoped project operations
 

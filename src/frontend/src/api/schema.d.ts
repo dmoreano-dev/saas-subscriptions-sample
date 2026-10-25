@@ -145,6 +145,7 @@ export interface components {
             accountId: string;
             /** Format: date-time */
             calculatedAt: string;
+            plan: components["schemas"]["PlanVersionRefDto"];
             /** Format: date-time */
             validUntil: null | string;
             capabilities: components["schemas"]["CapabilityDto"][];
@@ -195,6 +196,11 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
             user: components["schemas"]["UserDto"];
+        };
+        PlanVersionRefDto: {
+            key: string;
+            /** Format: int32 */
+            version: number;
         };
         ProblemDetails: {
             type?: null | string;

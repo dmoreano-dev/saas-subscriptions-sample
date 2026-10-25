@@ -709,6 +709,7 @@
         "required": [
           "accountId",
           "calculatedAt",
+          "plan",
           "validUntil",
           "capabilities"
         ],
@@ -721,6 +722,9 @@
           "calculatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/PlanVersionRefDto"
           },
           "validUntil": {
             "type": [
@@ -922,6 +926,22 @@
           },
           "user": {
             "$ref": "#/components/schemas/UserDto"
+          }
+        }
+      },
+      "PlanVersionRefDto": {
+        "required": [
+          "key",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

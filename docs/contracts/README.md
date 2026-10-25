@@ -22,7 +22,7 @@ During local development the document is served at `/openapi/v1.json` and a brow
 ## Endpoints (FND-03)
 
 An operation is contract-only until its item and answers `501 not_implemented`. Still contract-only:
-`GetAccountCapabilities` (ENT-03) and `CreateProject` (ENT-04); both are authorized first, so only a member reaches the 501.
+`CreateProject` (ENT-04); it is authorized first, so only a member reaches the 501.
 
 | Operation | Route | Notes |
 |---|---|---|
@@ -30,7 +30,7 @@ An operation is contract-only until its item and answers `501 not_implemented`. 
 | `Login` | `POST /api/auth/login` | Returns a bearer access token; failures are the generic `invalid_credentials`. |
 | `GetMe` | `GET /api/me` | Caller's profile. |
 | `ListAccounts` | `GET /api/accounts` | Only accounts the caller is an active member of; closed accounts are not listed. |
-| `GetAccountCapabilities` | `GET /api/accounts/{accountId}/capabilities` | Effective capabilities; unlimited is explicit (`isUnlimited`). |
+| `GetAccountCapabilities` | `GET /api/accounts/{accountId}/capabilities` | Effective capabilities now, from the server's state (never the token); any active member. `plan` {key, version}, `calculatedAt`, `validUntil` (next known transition, or null). Only declared capabilities are listed (absence denies); unlimited is explicit (`isUnlimited`). A UI hint only: every action is re-authorized. Implemented in ENT-03 (ADR 0012). |
 | `ListProjects` / `CreateProject` / `GetProject` / `DeleteProject` | `/api/accounts/{accountId}/projects[/{projectId}]` | `accountId` is a selector, not proof of membership. Reading needs `projects.read`, deleting `projects.write`. |
 
 ## Conventions
