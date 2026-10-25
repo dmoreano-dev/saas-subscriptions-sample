@@ -4,6 +4,7 @@ using Saas.Subscription.Sample.Domain.Authorization;
 using Saas.Subscription.Sample.Domain.Catalog;
 using Saas.Subscription.Sample.Domain.Identity;
 using Saas.Subscription.Sample.Domain.Projects;
+using Saas.Subscription.Sample.Domain.Subscriptions;
 
 namespace Saas.Subscription.Sample.Infrastructure.Persistence;
 
@@ -38,6 +39,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<PlanCapability> PlanCapabilities => Set<PlanCapability>();
 
     public DbSet<PlanPrice> PlanPrices => Set<PlanPrice>();
+
+    public DbSet<AccountSubscription> Subscriptions => Set<AccountSubscription>();
+
+    public DbSet<SubscriptionChange> SubscriptionChanges => Set<SubscriptionChange>();
 
     public static DbContextOptionsBuilder<AppDbContext> ConfigureOptions(
         DbContextOptionsBuilder<AppDbContext> builder,

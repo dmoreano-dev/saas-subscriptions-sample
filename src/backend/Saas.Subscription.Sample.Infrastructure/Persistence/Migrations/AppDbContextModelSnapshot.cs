@@ -727,6 +727,160 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                     b.ToTable("projects", (string)null);
                 });
 
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Subscriptions.AccountSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("AccessUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("access_until");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("CurrentPeriodEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("current_period_end");
+
+                    b.Property<DateTimeOffset>("CurrentPeriodStart")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("current_period_start");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at");
+
+                    b.Property<Guid>("PlanVersionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plan_version_id");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_subscriptions");
+
+                    b.HasAlternateKey("AccountId", "Id")
+                        .HasName("ak_subscriptions_account_id_id");
+
+                    b.HasIndex("AccountId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_subscriptions_account_id_current")
+                        .HasFilter("status <> 'Ended'");
+
+                    b.HasIndex("PlanVersionId")
+                        .HasDatabaseName("ix_subscriptions_plan_version_id");
+
+                    b.ToTable("subscriptions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_subscriptions_access_until", "access_until > current_period_start");
+
+                            t.HasCheckConstraint("ck_subscriptions_ended_at", "(status = 'Ended') = (ended_at IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_subscriptions_period", "current_period_end > current_period_start");
+
+                            t.HasCheckConstraint("ck_subscriptions_status", "status IN ('Active', 'PastDue', 'Ended')");
+                        });
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Subscriptions.SubscriptionChange", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<DateTimeOffset>("EffectiveAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_at");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("requested_at");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subscription_id");
+
+                    b.Property<Guid?>("TargetPlanVersionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_plan_version_id");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_subscription_changes");
+
+                    b.HasIndex("SubscriptionId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_subscription_changes_subscription_id_pending")
+                        .HasFilter("status = 'Pending'");
+
+                    b.HasIndex("TargetPlanVersionId")
+                        .HasDatabaseName("ix_subscription_changes_target_plan_version_id");
+
+                    b.HasIndex("AccountId", "SubscriptionId")
+                        .HasDatabaseName("ix_subscription_changes_account_id_subscription_id");
+
+                    b.ToTable("subscription_changes", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_subscription_changes_kind", "kind IN ('PlanChange', 'Cancel')");
+
+                            t.HasCheckConstraint("ck_subscription_changes_resolved_at", "(status = 'Pending') = (resolved_at IS NULL)");
+
+                            t.HasCheckConstraint("ck_subscription_changes_status", "status IN ('Pending', 'Applied', 'Cancelled')");
+
+                            t.HasCheckConstraint("ck_subscription_changes_target", "(kind = 'PlanChange') = (target_plan_version_id IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Accounts.Account", b =>
                 {
                     b.HasOne("Saas.Subscription.Sample.Domain.Identity.User", null)
@@ -863,6 +1017,40 @@ namespace Saas.Subscription.Sample.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_projects_accounts_account_id");
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Subscriptions.AccountSubscription", b =>
+                {
+                    b.HasOne("Saas.Subscription.Sample.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscriptions_accounts_account_id");
+
+                    b.HasOne("Saas.Subscription.Sample.Domain.Catalog.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("PlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscriptions_plan_versions_plan_version_id");
+                });
+
+            modelBuilder.Entity("Saas.Subscription.Sample.Domain.Subscriptions.SubscriptionChange", b =>
+                {
+                    b.HasOne("Saas.Subscription.Sample.Domain.Catalog.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("TargetPlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_subscription_changes_plan_versions_target_plan_version_id");
+
+                    b.HasOne("Saas.Subscription.Sample.Domain.Subscriptions.AccountSubscription", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId", "SubscriptionId")
+                        .HasPrincipalKey("AccountId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscription_changes_subscriptions_account_id_subscription_");
                 });
 
             modelBuilder.Entity("Saas.Subscription.Sample.Domain.Catalog.PlanVersion", b =>

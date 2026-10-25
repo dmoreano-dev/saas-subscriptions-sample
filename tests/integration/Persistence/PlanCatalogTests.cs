@@ -481,7 +481,13 @@ public class PlanCatalogTests(PostgresFixture postgres)
         var freePrices = await Sql.ScalarAsync<long>(connection, FreePriceCountQuery);
         var providerColumns = await Sql.ColumnAsync(
             connection,
-            "SELECT table_name || '.' || column_name FROM information_schema.columns WHERE table_schema = 'public' AND (column_name LIKE '%stripe%' OR column_name LIKE '%customer%' OR column_name LIKE '%subscription%')");
+            // The only "subscription" column allowed is the local foreign key of the subscription projection (ADR 0012).
+            """
+            SELECT table_name || '.' || column_name FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND (column_name LIKE '%stripe%' OR column_name LIKE '%customer%' OR column_name LIKE '%subscription%')
+              AND (table_name, column_name) <> ('subscription_changes', 'subscription_id')
+            """);
 
         // Assert
         Assert.Equal(0, freePrices);

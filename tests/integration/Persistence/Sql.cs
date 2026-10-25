@@ -116,6 +116,60 @@ internal static class Sql
         return id;
     }
 
+    /// <summary>The id of a seeded (or otherwise inserted) version of a plan.</summary>
+    public static Task<Guid> PlanVersionIdAsync(NpgsqlConnection connection, string planKey, int version = 1) =>
+        ScalarAsync<Guid>(
+            connection,
+            "SELECT pv.id FROM plan_versions pv JOIN plans p ON p.id = pv.plan_id WHERE p.key = @key AND pv.version = @version",
+            ("key", planKey), ("version", version));
+
+    /// <summary>A subscription whose period runs [periodStart, periodEnd); access ends at accessUntil (periodEnd by default).</summary>
+    public static async Task<Guid> InsertSubscriptionAsync(
+        NpgsqlConnection connection,
+        Guid accountId,
+        Guid planVersionId,
+        DateTimeOffset periodStart,
+        DateTimeOffset periodEnd,
+        string status = "Active",
+        DateTimeOffset? accessUntil = null,
+        DateTimeOffset? endedAt = null)
+    {
+        var id = NewId();
+        await InsertAsync(
+            connection,
+            transaction: null,
+            """
+            INSERT INTO subscriptions (id, account_id, plan_version_id, status, current_period_start, current_period_end, access_until, started_at, ended_at, created_at, updated_at)
+            VALUES (@id, @account, @version, @status, @start, @end, @access, @start, @ended, now(), now())
+            """,
+            ("id", id), ("account", accountId), ("version", planVersionId), ("status", status),
+            ("start", periodStart), ("end", periodEnd), ("access", accessUntil ?? periodEnd), ("ended", endedAt));
+        return id;
+    }
+
+    /// <summary>A scheduled change; resolved_at is set for every status except Pending.</summary>
+    public static async Task<Guid> InsertSubscriptionChangeAsync(
+        NpgsqlConnection connection,
+        Guid subscriptionId,
+        Guid accountId,
+        string kind,
+        Guid? targetPlanVersionId,
+        DateTimeOffset effectiveAt,
+        string status = "Pending")
+    {
+        var id = NewId();
+        await InsertAsync(
+            connection,
+            transaction: null,
+            """
+            INSERT INTO subscription_changes (id, subscription_id, account_id, kind, target_plan_version_id, effective_at, status, requested_at, resolved_at)
+            VALUES (@id, @subscription, @account, @kind, @target, @effective, @status, now(), CASE WHEN @status = 'Pending' THEN NULL ELSE now() END)
+            """,
+            ("id", id), ("subscription", subscriptionId), ("account", accountId), ("kind", kind),
+            ("target", targetPlanVersionId), ("effective", effectiveAt), ("status", status));
+        return id;
+    }
+
     public static Task<int> DeleteUserAsync(NpgsqlConnection connection, Guid id) =>
         ExecuteAsync(connection, "DELETE FROM users WHERE id = @id", ("id", id));
 
